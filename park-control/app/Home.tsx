@@ -3,6 +3,8 @@ import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   SafeAreaView, RefreshControl, ActivityIndicator,
 } from 'react-native';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {RootStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
 import Card from '@ui/Card';
 
@@ -34,7 +36,9 @@ interface Vehicle {
   entered_at: string;
 }
 
-export default function Home({navigation}: any) {
+type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
+
+export default function Home({navigation}: Props) {
   const app = useContext(Context);
   const [communities, setCommunities] = useState<Community[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
@@ -100,7 +104,7 @@ export default function Home({navigation}: any) {
           <View style={styles.emptyIcon}><Text style={styles.emptyP}>P</Text></View>
           <Text style={styles.emptyTitle}>No estás en ninguna comunidad</Text>
           <Text style={styles.emptyText}>Únete a tu condominio para ver la disponibilidad de estacionamientos</Text>
-          <TouchableOpacity style={styles.joinBtn} onPress={() => navigation.navigate('JoinCommunity')}>
+          <TouchableOpacity style={styles.joinBtn} onPress={() => navigation.navigate('JoinCommunity', {})}>
             <Text style={styles.joinBtnText}>Unirse a una comunidad</Text>
           </TouchableOpacity>
         </View>
@@ -221,7 +225,7 @@ export default function Home({navigation}: any) {
                 {c.is_home && <Text style={styles.homeBadge}>Principal</Text>}
               </TouchableOpacity>
             ))}
-            <TouchableOpacity style={styles.joinOtherBtn} onPress={() => { setShowSelector(false); navigation.navigate('JoinCommunity'); }}>
+            <TouchableOpacity style={styles.joinOtherBtn} onPress={() => { setShowSelector(false); navigation.navigate('JoinCommunity', {}); }}>
               <Text style={styles.joinOtherText}>+ Unirme a otra comunidad</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.closeModal} onPress={() => setShowSelector(false)}>

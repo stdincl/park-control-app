@@ -71,7 +71,8 @@ export function ContextProvider({children}: {children: React.ReactNode}) {
     setToken(null);
     setTokenState(null);
     setUser(null);
-    await AsyncStorage.multiRemove(['@pc_token', '@pc_user']);
+    await AsyncStorage.removeItem('@pc_token');
+    await AsyncStorage.removeItem('@pc_user');
   }, []);
 
   return (
