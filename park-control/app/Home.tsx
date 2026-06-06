@@ -1,10 +1,11 @@
-import React, {useContext, useState, useEffect, useCallback} from 'react';
+import React, {useContext, useState, useCallback, useRef} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
   SafeAreaView, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../App';
+import {useFocusEffect} from '@react-navigation/native';
 import Context from '@ctx/Contexto';
 import Card from '@ui/Card';
 import Feather from 'react-native-vector-icons/Feather';
@@ -35,6 +36,7 @@ interface Vehicle {
   minutes: number;
   overtime_minutes: number;
   entered_at: string;
+  receptor_name: string;
 }
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
@@ -48,15 +50,8 @@ export default function Home({navigation}: Props) {
   const [refreshing, setRefreshing] = useState(false);
   const [showSelector, setShowSelector] = useState(false);
 
-  const loadCommunities = useCallback(async () => {
-    try {
-      const data = await app.api.getMyCommunities();
-      setCommunities(data.communities);
-      const home = data.communities.find(c => c.is_home) || data.communities[0] || null;
-      setSelectedCommunity(home);
-      if (home) await loadVehicles(home.id);
-    } catch {}
-  }, []);
+  // ref avoids stale closure in useFocusEffect without adding selectedCommunity to deps
+  const selectedIdRef = useRef<number | null>(null);
 
   const loadVehicles = useCallback(async (id: number) => {
     try {
@@ -69,12 +64,34 @@ export default function Home({navigation}: Props) {
     } catch {}
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      await loadCommunities();
-      setLoading(false);
-    })();
-  }, []);
+  const loadCommunities = useCallback(async () => {
+    try {
+      const data = await app.api.getMyCommunities();
+      setCommunities(data.communities);
+
+      // Preserve current selection if still valid, otherwise pick home/first
+      const currentId = selectedIdRef.current;
+      const stillPresent = currentId != null && data.communities.find(c => c.id === currentId);
+      const target = stillPresent
+        ? data.communities.find(c => c.id === currentId)!
+        : (data.communities.find(c => c.is_home) || data.communities[0] || null);
+
+      selectedIdRef.current = target?.id ?? null;
+      setSelectedCommunity(target);
+      if (target) await loadVehicles(target.id);
+    } catch {}
+  }, [loadVehicles]);
+
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        await loadCommunities();
+        if (active) setLoading(false);
+      })();
+      return () => { active = false; };
+    }, [loadCommunities]),
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -83,6 +100,7 @@ export default function Home({navigation}: Props) {
   }, [loadCommunities]);
 
   const selectCommunity = useCallback(async (community: Community) => {
+    selectedIdRef.current = community.id;
     setSelectedCommunity(community);
     setShowSelector(false);
     await loadVehicles(community.id);
@@ -114,69 +132,96 @@ export default function Home({navigation}: Props) {
   }
 
   const avail = selectedCommunity?.availability;
+  const totalAvailable = avail ? avail.visitor_available + avail.disabled_available : 0;
+  const totalSpots = avail ? avail.visitor_total + avail.disabled_total : 0;
+
+  const formatMinutes = (m: number) => {
+    if (m < 60) return `${m} min`;
+    const h = Math.floor(m / 60);
+    const rem = m % 60;
+    return rem > 0 ? `${h}h ${rem} min` : `${h}h`;
+  };
+
+  const formatTime = (iso: string) => {
+    try {
+      return new Date(iso).toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'});
+    } catch { return ''; }
+  };
 
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}>
 
-        {/* Header */}
-        <View style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>Hola, {app.user?.name?.split(' ')[0]}</Text>
-            <TouchableOpacity style={styles.communitySelector} onPress={() => setShowSelector(true)}>
-              <Text style={styles.communityName} numberOfLines={1}>{selectedCommunity?.name}</Text>
-              <Feather name="chevron-down" size={16} color="#2563EB" style={{marginTop: 2}} />
+        {/* Hero / Community banner */}
+        <View style={styles.hero}>
+          <View style={styles.heroTop}>
+            <View>
+              <Text style={styles.greeting}>Hola, {app.user?.name?.split(' ')[0]}</Text>
+              <TouchableOpacity style={styles.communitySelector} onPress={() => setShowSelector(true)}>
+                <Text style={styles.communityName} numberOfLines={1}>{selectedCommunity?.name}</Text>
+                <Feather name="chevron-down" size={16} color="rgba(255,255,255,0.7)" style={{marginTop: 2}} />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+              </View>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
-            <View style={styles.profileAvatar}>
-              <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+
+          {/* Big availability number */}
+          {avail && (
+            <View style={styles.heroBig}>
+              <Text style={styles.heroBigNumber}>{totalAvailable}</Text>
+              <Text style={styles.heroBigLabel}>de {totalSpots} espacios libres</Text>
+              <View style={styles.heroMeta}>
+                <View style={styles.heroMetaItem}>
+                  <Feather name="map-pin" size={12} color="rgba(255,255,255,0.6)" />
+                  <Text style={styles.heroMetaText}>{selectedCommunity?.comune}</Text>
+                </View>
+                <View style={styles.heroMetaDot} />
+                <View style={styles.heroMetaItem}>
+                  <Feather name="hash" size={12} color="rgba(255,255,255,0.6)" />
+                  <Text style={styles.heroMetaText}>#{selectedCommunity?.identifier}</Text>
+                </View>
+              </View>
             </View>
-          </TouchableOpacity>
+          )}
+
+          {/* Sub-cards: visitor + accessible */}
+          {avail && (
+            <View style={styles.heroCards}>
+              <View style={styles.heroCard}>
+                <Feather name="truck" size={14} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.heroCardNum}>{avail.visitor_available}</Text>
+                <Text style={styles.heroCardLabel}>Visita</Text>
+                <View style={styles.heroProgressBg}>
+                  <View style={[styles.heroProgressFill, {
+                    width: `${avail.visitor_total > 0 ? (avail.visitor_used / avail.visitor_total) * 100 : 0}%`,
+                    backgroundColor: avail.visitor_available === 0 ? '#FCA5A5' : '#93C5FD',
+                  }]} />
+                </View>
+              </View>
+              <View style={[styles.heroCard, {borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.15)'}]}>
+                <Feather name="heart" size={14} color="rgba(255,255,255,0.8)" />
+                <Text style={styles.heroCardNum}>{avail.disabled_available}</Text>
+                <Text style={styles.heroCardLabel}>Accesible</Text>
+                <View style={styles.heroProgressBg}>
+                  <View style={[styles.heroProgressFill, {
+                    width: `${avail.disabled_total > 0 ? (avail.disabled_used / avail.disabled_total) * 100 : 0}%`,
+                    backgroundColor: '#C4B5FD',
+                  }]} />
+                </View>
+              </View>
+            </View>
+          )}
         </View>
 
         {/* Subscription warning */}
         {selectedCommunity && !selectedCommunity.subscription_active && (
           <View style={styles.subWarning}>
             <Text style={styles.subWarningText}>La suscripción de esta comunidad está vencida</Text>
-          </View>
-        )}
-
-        {/* Availability cards */}
-        {avail && (
-          <View style={styles.availSection}>
-            <Text style={styles.sectionTitle}>Disponibilidad ahora</Text>
-            <View style={styles.availRow}>
-              <Card style={styles.availCard}>
-                <View style={styles.availIconWrapper}>
-                  <Feather name="truck" size={20} color="#2563EB" />
-                </View>
-                <Text style={styles.availNumber}>{avail.visitor_available}</Text>
-                <Text style={styles.availLabel}>Libres</Text>
-                <Text style={styles.availSub}>de {avail.visitor_total} totales</Text>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, {
-                    width: `${avail.visitor_total > 0 ? (avail.visitor_used / avail.visitor_total) * 100 : 0}%`,
-                    backgroundColor: avail.visitor_available === 0 ? '#EF4444' : '#2563EB',
-                  }]} />
-                </View>
-              </Card>
-              <Card style={styles.availCard}>
-                <View style={[styles.availIconWrapper, {backgroundColor: '#F5F3FF'}]}>
-                  <Feather name="heart" size={20} color="#7C3AED" />
-                </View>
-                <Text style={styles.availNumber}>{avail.disabled_available}</Text>
-                <Text style={styles.availLabel}>Libres</Text>
-                <Text style={styles.availSub}>de {avail.disabled_total} totales</Text>
-                <View style={styles.progressBar}>
-                  <View style={[styles.progressFill, {
-                    width: `${avail.disabled_total > 0 ? (avail.disabled_used / avail.disabled_total) * 100 : 0}%`,
-                    backgroundColor: '#7C3AED',
-                  }]} />
-                </View>
-              </Card>
-            </View>
           </View>
         )}
 
@@ -193,17 +238,20 @@ export default function Home({navigation}: Props) {
                 <View style={styles.vehicleRow}>
                   <View style={[styles.vehicleBadge, v.overtime_minutes > 0 && styles.vehicleBadgeOver]}>
                     <Text style={styles.vehiclePlate}>{v.plate}</Text>
+                    {v.disabled_spot && <Feather name="heart" size={10} color="#7C3AED" style={{marginTop: 2}} />}
                   </View>
                   <View style={styles.vehicleInfo}>
                     <Text style={styles.vehicleVisitor} numberOfLines={1}>{v.visitor_name}</Text>
                     <Text style={styles.vehicleDest} numberOfLines={1}>{v.destination}</Text>
+                    <Text style={styles.vehicleReceptor} numberOfLines={1}>Recibido por {v.receptor_name}</Text>
                   </View>
                   <View style={styles.vehicleTime}>
+                    <Text style={styles.vehicleEnteredAt}>{formatTime(v.entered_at)}</Text>
                     <Text style={[styles.vehicleMinutes, v.overtime_minutes > 0 && styles.vehicleOver]}>
-                      {v.minutes}m
+                      {formatMinutes(v.minutes)}
                     </Text>
                     {v.overtime_minutes > 0 && (
-                      <Text style={styles.vehicleOvertimeLabel}>+{v.overtime_minutes}m extra</Text>
+                      <Text style={styles.vehicleOvertimeLabel}>+{formatMinutes(v.overtime_minutes)}</Text>
                     )}
                   </View>
                 </View>
@@ -255,37 +303,52 @@ const styles = StyleSheet.create({
   emptyText: {fontFamily: 'Inter', fontSize: 15, color: '#64748B', textAlign: 'center', lineHeight: 22, marginBottom: 32},
   joinBtn: {backgroundColor: '#2563EB', paddingVertical: 14, paddingHorizontal: 32, borderRadius: 14},
   joinBtnText: {fontFamily: 'Inter', fontWeight: '700', fontSize: 16, color: '#fff'},
-  header: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 20, paddingTop: 12},
-  greeting: {fontFamily: 'Inter', fontSize: 14, color: '#64748B'},
+
+  // Hero banner
+  hero: {
+    backgroundColor: '#1E40AF',
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+    overflow: 'hidden',
+  },
+  heroTop: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 20, paddingTop: 16},
+  greeting: {fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,255,255,0.6)'},
   communitySelector: {flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2},
-  communityName: {fontFamily: 'Inter', fontSize: 20, fontWeight: '700', color: '#1E293B', maxWidth: 240},
-  chevron: {fontSize: 16, color: '#2563EB'},
-  profileBtn: {paddingTop: 4},
-  profileAvatar: {width: 38, height: 38, borderRadius: 19, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center'},
+  communityName: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#fff', maxWidth: 230},
+  profileBtn: {paddingTop: 2},
+  profileAvatar: {width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center'},
   profileInitial: {fontFamily: 'Inter', fontSize: 16, fontWeight: '700', color: '#fff'},
-  subWarning: {marginHorizontal: 20, padding: 12, backgroundColor: '#FEF9C3', borderRadius: 10, marginBottom: 8},
+  heroBig: {alignItems: 'center', paddingVertical: 16},
+  heroBigNumber: {fontFamily: 'Inter', fontSize: 72, fontWeight: '800', color: '#fff', lineHeight: 80},
+  heroBigLabel: {fontFamily: 'Inter', fontSize: 14, color: 'rgba(255,255,255,0.6)', marginTop: 4},
+  heroMeta: {flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 10},
+  heroMetaItem: {flexDirection: 'row', alignItems: 'center', gap: 4},
+  heroMetaText: {fontFamily: 'Inter', fontSize: 12, color: 'rgba(255,255,255,0.55)'},
+  heroMetaDot: {width: 3, height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.3)'},
+  heroCards: {flexDirection: 'row', marginHorizontal: 20, marginTop: 4},
+  heroCard: {flex: 1, alignItems: 'center', paddingVertical: 12, gap: 4},
+  heroCardNum: {fontFamily: 'Inter', fontSize: 28, fontWeight: '800', color: '#fff'},
+  heroCardLabel: {fontFamily: 'Inter', fontSize: 11, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: 0.5},
+  heroProgressBg: {width: '80%', height: 3, backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: 2, marginTop: 6, overflow: 'hidden'},
+  heroProgressFill: {height: '100%', borderRadius: 2},
+
+  subWarning: {margin: 20, marginBottom: 0, padding: 12, backgroundColor: '#FEF9C3', borderRadius: 10},
   subWarningText: {fontFamily: 'Inter', fontSize: 13, color: '#854D0E', textAlign: 'center'},
-  availSection: {paddingHorizontal: 20, marginBottom: 24},
   sectionTitle: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#475569', marginBottom: 12},
-  availRow: {flexDirection: 'row', gap: 12},
-  availCard: {flex: 1},
-  availIconWrapper: {width: 36, height: 36, borderRadius: 10, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 10},
-  availNumber: {fontFamily: 'Inter', fontSize: 36, fontWeight: '800', color: '#1E293B'},
-  availLabel: {fontFamily: 'Inter', fontSize: 13, color: '#64748B'},
-  availSub: {fontFamily: 'Inter', fontSize: 11, color: '#94A3B8', marginTop: 2},
-  progressBar: {height: 4, backgroundColor: '#F1F5F9', borderRadius: 2, marginTop: 12, overflow: 'hidden'},
-  progressFill: {height: '100%', borderRadius: 2},
-  vehiclesSection: {paddingHorizontal: 20, gap: 8},
+  vehiclesSection: {padding: 20, gap: 8},
   vehicleCard: {marginBottom: 0},
-  vehicleRow: {flexDirection: 'row', alignItems: 'center', gap: 12},
-  vehicleBadge: {backgroundColor: '#EFF6FF', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8},
+  vehicleRow: {flexDirection: 'row', alignItems: 'flex-start', gap: 12},
+  vehicleBadge: {backgroundColor: '#EFF6FF', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, alignItems: 'center', minWidth: 64},
   vehicleBadgeOver: {backgroundColor: '#FEF2F2'},
-  vehiclePlate: {fontFamily: 'Inter', fontWeight: '700', fontSize: 14, color: '#1E293B'},
+  vehiclePlate: {fontFamily: 'Inter', fontWeight: '700', fontSize: 13, color: '#1E293B'},
   vehicleInfo: {flex: 1},
   vehicleVisitor: {fontFamily: 'Inter', fontSize: 14, fontWeight: '500', color: '#1E293B'},
-  vehicleDest: {fontFamily: 'Inter', fontSize: 12, color: '#94A3B8', marginTop: 2},
+  vehicleDest: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginTop: 1},
+  vehicleReceptor: {fontFamily: 'Inter', fontSize: 11, color: '#94A3B8', marginTop: 3},
   vehicleTime: {alignItems: 'flex-end'},
-  vehicleMinutes: {fontFamily: 'Inter', fontSize: 14, fontWeight: '600', color: '#1E293B'},
+  vehicleEnteredAt: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginBottom: 2},
+  vehicleMinutes: {fontFamily: 'Inter', fontSize: 13, fontWeight: '600', color: '#1E293B'},
   vehicleOver: {color: '#EF4444'},
   vehicleOvertimeLabel: {fontFamily: 'Inter', fontSize: 11, color: '#EF4444', marginTop: 2},
   noVehicles: {fontFamily: 'Inter', fontSize: 14, color: '#94A3B8', textAlign: 'center'},

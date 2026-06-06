@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
+    "@invertase/react-native-apple-authentication": "^2.5.1",
     "@react-native-async-storage/async-storage": "^3.1.1",
     "@react-native-google-signin/google-signin": "^16.1.2",
     "@react-native/new-app-screen": "0.85.3",
@@ -49,6 +50,8 @@
     "node": ">= 22.11.0"
   },
   "react-native": {
-    "assets": ["./park-control/img/fonts"]
+    "assets": [
+      "./park-control/img/fonts"
+    ]
   }
 }

@@ -5,11 +5,18 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {ContextProvider} from './park-control/ctx/Contexto';
 import Context from './park-control/ctx/Contexto';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import Login from '@app/Login';
 import Home from '@app/Home';
 import JoinCommunity from '@app/JoinCommunity';
 import Profile from '@app/Profile';
 import ForgotPassword from '@app/ForgotPassword';
+
+// Configure Google Sign-In once at app startup
+// Replace GOOGLE_WEB_CLIENT_ID with the real Web Client ID from Google Cloud Console
+// See AUTH.md for instructions on how to obtain this value
+const GOOGLE_WEB_CLIENT_ID = 'PLACEHOLDER_WEB_CLIENT_ID.apps.googleusercontent.com';
+GoogleSignin.configure({webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true});
 
 export type RootStackParamList = {
   Home: undefined;

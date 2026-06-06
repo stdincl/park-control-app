@@ -288,6 +288,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				CODE_SIGN_ENTITLEMENTS = ParkControlApp/ParkControlApp.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ParkControlApp;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -317,6 +318,7 @@
 					"-ObjC",
 					"-lc++",
 				);
+				CODE_SIGN_ENTITLEMENTS = ParkControlApp/ParkControlApp.entitlements;
 				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
 				PRODUCT_NAME = ParkControlApp;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
