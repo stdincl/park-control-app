@@ -1,5 +1,5 @@
 const API_BASE = __DEV__
-  ? 'http://127.0.0.1:8001'
+  ? 'http://local.parkcontrol.api.stdin.cl'
   : 'https://parkcontrol.api.stdin.cl';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
