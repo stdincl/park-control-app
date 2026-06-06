@@ -1,8 +1,9 @@
 import React, {useContext, useState, useCallback, useRef} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  SafeAreaView, RefreshControl, ActivityIndicator,
+  StatusBar, Platform, ImageBackground, RefreshControl, ActivityIndicator,
 } from 'react-native';
+import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../App';
 import {useFocusEffect} from '@react-navigation/native';
@@ -15,6 +16,7 @@ interface Community {
   name: string;
   comune: string;
   identifier: number;
+  banner: string | null;
   is_home: boolean;
   subscription_active: boolean;
   availability: {
@@ -43,6 +45,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
 export default function Home({navigation}: Props) {
   const app = useContext(Context);
+  const insets = useSafeAreaInsets();
   const [communities, setCommunities] = useState<Community[]>([]);
   const [selectedCommunity, setSelectedCommunity] = useState<Community | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -108,17 +111,19 @@ export default function Home({navigation}: Props) {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View style={[styles.safe, {paddingTop: insets.top}]}>
+        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
         <View style={styles.loading}>
           <ActivityIndicator color="#2563EB" size="large" />
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   if (communities.length === 0) {
     return (
-      <SafeAreaView style={styles.safe}>
+      <View style={[styles.safe, {paddingTop: insets.top}]}>
+        <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
         <View style={styles.empty}>
           <View style={styles.emptyIcon}><Text style={styles.emptyP}>P</Text></View>
           <Text style={styles.emptyTitle}>No estás en ninguna comunidad</Text>
@@ -127,7 +132,7 @@ export default function Home({navigation}: Props) {
             <Text style={styles.joinBtnText}>Unirse a una comunidad</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -148,26 +153,40 @@ export default function Home({navigation}: Props) {
     } catch { return ''; }
   };
 
+  const bannerUri = selectedCommunity?.banner;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <View style={styles.safe}>
+      <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
       <ScrollView
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}>
 
         {/* Hero / Community banner */}
-        <View style={styles.hero}>
-          <View style={styles.heroTop}>
-            <View>
+        <ImageBackground
+          source={bannerUri ? {uri: bannerUri} : undefined}
+          style={[styles.hero, !bannerUri && {backgroundColor: '#1E40AF'}]}
+          imageStyle={styles.heroBgImage}>
+          {/* Gradient overlay (always present to ensure text readability) */}
+          <View style={styles.heroOverlay} />
+
+          <View style={[styles.heroTop, {paddingTop: insets.top + 16}]}>
+            <View style={{flex: 1}}>
               <Text style={styles.greeting}>Hola, {app.user?.name?.split(' ')[0]}</Text>
               <TouchableOpacity style={styles.communitySelector} onPress={() => setShowSelector(true)}>
                 <Text style={styles.communityName} numberOfLines={1}>{selectedCommunity?.name}</Text>
                 <Feather name="chevron-down" size={16} color="rgba(255,255,255,0.7)" style={{marginTop: 2}} />
               </TouchableOpacity>
             </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
-              <View style={styles.profileAvatar}>
-                <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
-              </View>
-            </TouchableOpacity>
+            <View style={styles.heroActions}>
+              <TouchableOpacity onPress={onRefresh} style={styles.heroIconBtn} disabled={refreshing}>
+                <Feather name="refresh-cw" size={16} color="rgba(255,255,255,0.85)" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
+                <View style={styles.profileAvatar}>
+                  <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+                </View>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {/* Big availability number */}
@@ -216,7 +235,7 @@ export default function Home({navigation}: Props) {
               </View>
             </View>
           )}
-        </View>
+        </ImageBackground>
 
         {/* Subscription warning */}
         {selectedCommunity && !selectedCommunity.subscription_active && (
@@ -266,7 +285,7 @@ export default function Home({navigation}: Props) {
       {/* Community selector modal */}
       {showSelector && (
         <View style={styles.modalOverlay}>
-          <View style={styles.modal}>
+          <View style={[styles.modal, {paddingBottom: insets.bottom + 24}]}>
             <Text style={styles.modalTitle}>Cambiar comunidad</Text>
             {communities.map(c => (
               <TouchableOpacity
@@ -289,7 +308,7 @@ export default function Home({navigation}: Props) {
           </View>
         </View>
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -306,17 +325,26 @@ const styles = StyleSheet.create({
 
   // Hero banner
   hero: {
-    backgroundColor: '#1E40AF',
     paddingBottom: 28,
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     overflow: 'hidden',
   },
-  heroTop: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', padding: 20, paddingTop: 16},
+  heroBgImage: {borderBottomLeftRadius: 28, borderBottomRightRadius: 28},
+  heroOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#1E40AF',
+    opacity: 0.82,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
+  },
+  heroTop: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', paddingHorizontal: 20, paddingBottom: 8},
+  heroActions: {flexDirection: 'row', alignItems: 'center', gap: 10, paddingTop: 2},
+  heroIconBtn: {width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.15)', alignItems: 'center', justifyContent: 'center'},
   greeting: {fontFamily: 'Inter', fontSize: 13, color: 'rgba(255,255,255,0.6)'},
   communitySelector: {flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2},
-  communityName: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#fff', maxWidth: 230},
-  profileBtn: {paddingTop: 2},
+  communityName: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#fff', maxWidth: 200},
+  profileBtn: {},
   profileAvatar: {width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center'},
   profileInitial: {fontFamily: 'Inter', fontSize: 16, fontWeight: '700', color: '#fff'},
   heroBig: {alignItems: 'center', paddingVertical: 16},
