@@ -1,7 +1,15 @@
 {
   "extends": "@react-native/typescript-config",
   "compilerOptions": {
-    "types": ["jest"]
+    "types": ["jest"],
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": ["park-control/app/*"],
+      "@ui/*": ["park-control/ui/*"],
+      "@ctx/*": ["park-control/ctx/*"],
+      "@api/*": ["park-control/api/*"],
+      "@img/*": ["park-control/img/*"]
+    }
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["**/node_modules", "**/Pods"]
