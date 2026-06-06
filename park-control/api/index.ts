@@ -1,5 +1,9 @@
+import {Platform} from 'react-native';
+
 const API_BASE = __DEV__
-  ? 'http://local.parkcontrol.api.stdin.cl'
+  ? Platform.OS === 'android'
+    ? 'http://10.0.2.2:8001'
+    : 'http://local.parkcontrol.api.stdin.cl:8001'
   : 'https://parkcontrol.api.stdin.cl';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -90,6 +94,15 @@ const api = {
 
   leaveCommunity: (id: number) =>
     request<{message: string}>('DELETE', `/api/owner/communities/${id}`),
+
+  // Reservations
+  getCommunityReservations: (communityId: number) =>
+    request<{reservations_enabled: boolean; reservations: any[]}>('GET', `/api/owner/communities/${communityId}/reservations`),
+
+  createReservation: (communityId: number, vehicles: number, date: string, timeFrom: string, timeTo: string) =>
+    request<{reservation: any}>('POST', '/api/owner/reservations', {
+      community_id: communityId, vehicles, date, time_from: timeFrom, time_to: timeTo,
+    }),
 
   // Plans
   getPlans: () => request<{plans: any[]}>('GET', '/api/plans'),

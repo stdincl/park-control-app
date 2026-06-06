@@ -11,17 +11,20 @@ import Home from '@app/Home';
 import JoinCommunity from '@app/JoinCommunity';
 import Profile from '@app/Profile';
 import ForgotPassword from '@app/ForgotPassword';
+import Reservations from '@app/Reservations';
 
 // Configure Google Sign-In once at app startup
 // Replace GOOGLE_WEB_CLIENT_ID with the real Web Client ID from Google Cloud Console
 // See AUTH.md for instructions on how to obtain this value
 const GOOGLE_WEB_CLIENT_ID = 'PLACEHOLDER_WEB_CLIENT_ID.apps.googleusercontent.com';
-GoogleSignin.configure({webClientId: GOOGLE_WEB_CLIENT_ID, offlineAccess: true});
+const GOOGLE_IOS_CLIENT_ID = 'PLACEHOLDER_IOS_CLIENT_ID.apps.googleusercontent.com';
+GoogleSignin.configure({webClientId: GOOGLE_WEB_CLIENT_ID, iosClientId: GOOGLE_IOS_CLIENT_ID, offlineAccess: true});
 
 export type RootStackParamList = {
   Home: undefined;
   JoinCommunity: {fromSelector?: boolean};
   Profile: undefined;
+  Reservations: {communityId: number; communityName: string};
 };
 
 export type AuthStackParamList = {
@@ -88,6 +91,11 @@ function AppNavigator() {
       <RootStack.Screen
         name="Profile"
         component={Profile}
+        options={{presentation: 'modal'}}
+      />
+      <RootStack.Screen
+        name="Reservations"
+        component={Reservations}
         options={{presentation: 'modal'}}
       />
     </RootStack.Navigator>

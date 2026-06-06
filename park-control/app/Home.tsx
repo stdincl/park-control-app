@@ -1,6 +1,6 @@
 import React, {useContext, useState, useCallback, useRef} from 'react';
 import {
-  View, Text, ScrollView, TouchableOpacity, StyleSheet,
+  View, Text, ScrollView, TouchableOpacity, StyleSheet, Alert,
   StatusBar, Platform, ImageBackground, RefreshControl, ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -19,6 +19,7 @@ interface Community {
   banner: string | null;
   is_home: boolean;
   subscription_active: boolean;
+  reservations_enabled: boolean;
   availability: {
     visitor_total: number;
     visitor_used: number;
@@ -158,93 +159,121 @@ export default function Home({navigation}: Props) {
   return (
     <View style={styles.safe}>
       <StatusBar translucent backgroundColor="transparent" barStyle="light-content" />
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}>
 
-        {/* Hero / Community banner */}
-        <ImageBackground
-          source={bannerUri ? {uri: bannerUri} : undefined}
-          style={[styles.hero, !bannerUri && {backgroundColor: '#1E40AF'}]}
-          imageStyle={styles.heroBgImage}>
-          {/* Gradient overlay (always present to ensure text readability) */}
-          <View style={styles.heroOverlay} />
+      {/* Hero / Community banner — fixed, not scrollable */}
+      <ImageBackground
+        source={bannerUri ? {uri: bannerUri} : undefined}
+        style={[styles.hero, !bannerUri && {backgroundColor: '#1E40AF'}]}
+        imageStyle={styles.heroBgImage}>
+        <View style={styles.heroOverlay} />
 
-          <View style={[styles.heroTop, {paddingTop: insets.top + 16}]}>
-            <View style={{flex: 1}}>
-              <Text style={styles.greeting}>Hola, {app.user?.name?.split(' ')[0]}</Text>
-              <TouchableOpacity style={styles.communitySelector} onPress={() => setShowSelector(true)}>
-                <Text style={styles.communityName} numberOfLines={1}>{selectedCommunity?.name}</Text>
-                <Feather name="chevron-down" size={16} color="rgba(255,255,255,0.7)" style={{marginTop: 2}} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.heroActions}>
-              <TouchableOpacity onPress={onRefresh} style={styles.heroIconBtn} disabled={refreshing}>
-                <Feather name="refresh-cw" size={16} color="rgba(255,255,255,0.85)" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
-                <View style={styles.profileAvatar}>
-                  <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
-                </View>
-              </TouchableOpacity>
+        <View style={[styles.heroTop, {paddingTop: insets.top + 16}]}>
+          <View style={{flex: 1}}>
+            <Text style={styles.greeting}>Hola, {app.user?.name?.split(' ')[0]}</Text>
+            <TouchableOpacity style={styles.communitySelector} onPress={() => setShowSelector(true)}>
+              <Text style={styles.communityName} numberOfLines={1}>{selectedCommunity?.name}</Text>
+              <Feather name="chevron-down" size={16} color="rgba(255,255,255,0.7)" style={{marginTop: 2}} />
+            </TouchableOpacity>
+          </View>
+          <View style={styles.heroActions}>
+            <TouchableOpacity onPress={onRefresh} style={styles.heroIconBtn} disabled={refreshing}>
+              <Feather name="refresh-cw" size={16} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
+              <View style={styles.profileAvatar}>
+                <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {avail && (
+          <View style={styles.heroBig}>
+            <Text style={styles.heroBigNumber}>{totalAvailable}</Text>
+            <Text style={styles.heroBigLabel}>de {totalSpots} espacios libres</Text>
+            <View style={styles.heroMeta}>
+              <View style={styles.heroMetaItem}>
+                <Feather name="map-pin" size={12} color="rgba(255,255,255,0.6)" />
+                <Text style={styles.heroMetaText}>{selectedCommunity?.comune}</Text>
+              </View>
+              <View style={styles.heroMetaDot} />
+              <View style={styles.heroMetaItem}>
+                <Feather name="hash" size={12} color="rgba(255,255,255,0.6)" />
+                <Text style={styles.heroMetaText}>#{selectedCommunity?.identifier}</Text>
+              </View>
             </View>
           </View>
+        )}
 
-          {/* Big availability number */}
-          {avail && (
-            <View style={styles.heroBig}>
-              <Text style={styles.heroBigNumber}>{totalAvailable}</Text>
-              <Text style={styles.heroBigLabel}>de {totalSpots} espacios libres</Text>
-              <View style={styles.heroMeta}>
-                <View style={styles.heroMetaItem}>
-                  <Feather name="map-pin" size={12} color="rgba(255,255,255,0.6)" />
-                  <Text style={styles.heroMetaText}>{selectedCommunity?.comune}</Text>
-                </View>
-                <View style={styles.heroMetaDot} />
-                <View style={styles.heroMetaItem}>
-                  <Feather name="hash" size={12} color="rgba(255,255,255,0.6)" />
-                  <Text style={styles.heroMetaText}>#{selectedCommunity?.identifier}</Text>
-                </View>
+        {avail && (
+          <View style={styles.heroCards}>
+            <View style={styles.heroCard}>
+              <Feather name="truck" size={14} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.heroCardNum}>{avail.visitor_available}</Text>
+              <Text style={styles.heroCardLabel}>Visita</Text>
+              <View style={styles.heroProgressBg}>
+                <View style={[styles.heroProgressFill, {
+                  width: `${avail.visitor_total > 0 ? (avail.visitor_used / avail.visitor_total) * 100 : 0}%`,
+                  backgroundColor: avail.visitor_available === 0 ? '#FCA5A5' : '#93C5FD',
+                }]} />
               </View>
             </View>
-          )}
-
-          {/* Sub-cards: visitor + accessible */}
-          {avail && (
-            <View style={styles.heroCards}>
-              <View style={styles.heroCard}>
-                <Feather name="truck" size={14} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.heroCardNum}>{avail.visitor_available}</Text>
-                <Text style={styles.heroCardLabel}>Visita</Text>
-                <View style={styles.heroProgressBg}>
-                  <View style={[styles.heroProgressFill, {
-                    width: `${avail.visitor_total > 0 ? (avail.visitor_used / avail.visitor_total) * 100 : 0}%`,
-                    backgroundColor: avail.visitor_available === 0 ? '#FCA5A5' : '#93C5FD',
-                  }]} />
-                </View>
-              </View>
-              <View style={[styles.heroCard, {borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.15)'}]}>
-                <Feather name="heart" size={14} color="rgba(255,255,255,0.8)" />
-                <Text style={styles.heroCardNum}>{avail.disabled_available}</Text>
-                <Text style={styles.heroCardLabel}>Accesible</Text>
-                <View style={styles.heroProgressBg}>
-                  <View style={[styles.heroProgressFill, {
-                    width: `${avail.disabled_total > 0 ? (avail.disabled_used / avail.disabled_total) * 100 : 0}%`,
-                    backgroundColor: '#C4B5FD',
-                  }]} />
-                </View>
+            <View style={[styles.heroCard, {borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.15)'}]}>
+              <Feather name="heart" size={14} color="rgba(255,255,255,0.8)" />
+              <Text style={styles.heroCardNum}>{avail.disabled_available}</Text>
+              <Text style={styles.heroCardLabel}>Accesible</Text>
+              <View style={styles.heroProgressBg}>
+                <View style={[styles.heroProgressFill, {
+                  width: `${avail.disabled_total > 0 ? (avail.disabled_used / avail.disabled_total) * 100 : 0}%`,
+                  backgroundColor: '#C4B5FD',
+                }]} />
               </View>
             </View>
-          )}
-        </ImageBackground>
+          </View>
+        )}
+      </ImageBackground>
 
-        {/* Subscription warning */}
+      {/* Scrollable body — only vehicles list scrolls, header stays fixed */}
+      <ScrollView
+        style={styles.body}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#2563EB" />}>
+
         {selectedCommunity && !selectedCommunity.subscription_active && (
           <View style={styles.subWarning}>
             <Text style={styles.subWarningText}>La suscripción de esta comunidad está vencida</Text>
           </View>
         )}
 
-        {/* Active vehicles */}
+        {/* Reservations quick action */}
+        {selectedCommunity && (
+          <View style={styles.actionsRow}>
+            <TouchableOpacity
+              style={[
+                styles.actionBtn,
+                !(selectedCommunity as any).reservations_enabled && styles.actionBtnDisabled,
+              ]}
+              onPress={() => {
+                if ((selectedCommunity as any).reservations_enabled) {
+                  navigation.navigate('Reservations', {
+                    communityId: selectedCommunity.id,
+                    communityName: selectedCommunity.name,
+                  });
+                } else {
+                  Alert.alert(
+                    'Reservas no disponibles',
+                    'El sistema de reservas no está habilitado en esta comunidad.',
+                  );
+                }
+              }}>
+              <Feather name="calendar" size={16} color={(selectedCommunity as any).reservations_enabled ? '#2563EB' : '#94A3B8'} />
+              <Text style={[
+                styles.actionBtnText,
+                !(selectedCommunity as any).reservations_enabled && styles.actionBtnTextDisabled,
+              ]}>Reservar</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <View style={styles.vehiclesSection}>
           <Text style={styles.sectionTitle}>Vehículos estacionados ({vehicles.length})</Text>
           {vehicles.length === 0 ? (
@@ -314,6 +343,7 @@ export default function Home({navigation}: Props) {
 
 const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: '#F8FAFC'},
+  body: {flex: 1, backgroundColor: '#F8FAFC'},
   loading: {flex: 1, alignItems: 'center', justifyContent: 'center'},
   empty: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40},
   emptyIcon: {width: 80, height: 80, borderRadius: 22, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 20},
@@ -380,6 +410,11 @@ const styles = StyleSheet.create({
   vehicleOver: {color: '#EF4444'},
   vehicleOvertimeLabel: {fontFamily: 'Inter', fontSize: 11, color: '#EF4444', marginTop: 2},
   noVehicles: {fontFamily: 'Inter', fontSize: 14, color: '#94A3B8', textAlign: 'center'},
+  actionsRow: {paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4, flexDirection: 'row', gap: 10},
+  actionBtn: {flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE'},
+  actionBtnDisabled: {backgroundColor: '#F1F5F9', borderColor: '#E2E8F0'},
+  actionBtnText: {fontFamily: 'Inter', fontSize: 14, fontWeight: '600', color: '#2563EB'},
+  actionBtnTextDisabled: {color: '#94A3B8'},
   modalOverlay: {position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'},
   modal: {backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40},
   modalTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 16},
