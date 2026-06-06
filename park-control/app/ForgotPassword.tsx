@@ -3,6 +3,7 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, SafeAreaView, Alert, ActivityIndicator,
 } from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
@@ -46,7 +47,7 @@ export default function ForgotPassword({navigation}: Props) {
         {sent ? (
           <View style={styles.successBox}>
             <View style={styles.successIcon}>
-              <Text style={styles.successIconText}>✓</Text>
+              <Feather name="check" size={32} color="#16A34A" />
             </View>
             <Text style={styles.successTitle}>Correo enviado</Text>
             <Text style={styles.successText}>
@@ -119,7 +120,6 @@ const styles = StyleSheet.create({
     width: 72, height: 72, borderRadius: 36,
     backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  successIconText: {fontSize: 32, color: '#16A34A'},
   successTitle: {fontFamily: 'Inter-Bold', fontSize: 22, color: '#1E293B', marginBottom: 12},
   successText: {fontFamily: 'Inter-Regular', fontSize: 15, color: '#475569', textAlign: 'center', lineHeight: 22, marginBottom: 12},
   emailHighlight: {fontFamily: 'Inter-SemiBold', color: '#2563EB'},

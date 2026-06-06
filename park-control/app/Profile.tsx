@@ -7,6 +7,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
 import Input from '@ui/Input';
+import Feather from 'react-native-vector-icons/Feather';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
@@ -110,21 +111,21 @@ export default function Profile({navigation}: Props) {
               <TouchableOpacity style={styles.row} onPress={() => { setNewName(app.user?.name || ''); setSection('editName'); }}>
                 <View style={styles.rowLeft}>
                   <View style={[styles.rowIcon, {backgroundColor: '#EFF6FF'}]}>
-                    <Text style={styles.rowIconText}>✎</Text>
+                    <Feather name="edit-2" size={16} color="#2563EB" />
                   </View>
                   <Text style={styles.rowText}>Editar nombre</Text>
                 </View>
-                <Text style={styles.rowChevron}>›</Text>
+                <Feather name="chevron-right" size={18} color="#CBD5E1" />
               </TouchableOpacity>
 
               <TouchableOpacity style={styles.row} onPress={() => setSection('changePassword')}>
                 <View style={styles.rowLeft}>
                   <View style={[styles.rowIcon, {backgroundColor: '#F0FDF4'}]}>
-                    <Text style={styles.rowIconText}>🔑</Text>
+                    <Feather name="lock" size={16} color="#16A34A" />
                   </View>
                   <Text style={styles.rowText}>Cambiar contraseña</Text>
                 </View>
-                <Text style={styles.rowChevron}>›</Text>
+                <Feather name="chevron-right" size={18} color="#CBD5E1" />
               </TouchableOpacity>
             </View>
 
@@ -133,11 +134,11 @@ export default function Profile({navigation}: Props) {
               <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('JoinCommunity', {})}>
                 <View style={styles.rowLeft}>
                   <View style={[styles.rowIcon, {backgroundColor: '#F0F9FF'}]}>
-                    <Text style={styles.rowIconText}>＋</Text>
+                    <Feather name="plus" size={16} color="#0284C7" />
                   </View>
                   <Text style={styles.rowText}>Unirme a otra comunidad</Text>
                 </View>
-                <Text style={styles.rowChevron}>›</Text>
+                <Feather name="chevron-right" size={18} color="#CBD5E1" />
               </TouchableOpacity>
             </View>
 
@@ -145,7 +146,7 @@ export default function Profile({navigation}: Props) {
               <TouchableOpacity style={[styles.row, styles.logoutRow]} onPress={handleLogout}>
                 <View style={styles.rowLeft}>
                   <View style={[styles.rowIcon, {backgroundColor: '#FEF2F2'}]}>
-                    <Text style={styles.rowIconText}>⎋</Text>
+                    <Feather name="log-out" size={16} color="#EF4444" />
                   </View>
                   <Text style={[styles.rowText, styles.logoutText]}>Cerrar sesión</Text>
                 </View>
@@ -250,10 +251,8 @@ const styles = StyleSheet.create({
   logoutRow: {borderColor: '#FEE2E2'},
   rowLeft: {flexDirection: 'row', alignItems: 'center', gap: 12},
   rowIcon: {width: 36, height: 36, borderRadius: 10, alignItems: 'center', justifyContent: 'center'},
-  rowIconText: {fontSize: 18},
   rowText: {fontFamily: 'Inter-Medium', fontSize: 15, color: '#1E293B'},
   logoutText: {color: '#EF4444'},
-  rowChevron: {fontSize: 20, color: '#CBD5E1'},
   version: {fontFamily: 'Inter-Regular', fontSize: 12, color: '#CBD5E1', textAlign: 'center', marginTop: 20},
   formSection: {padding: 24},
   formTitle: {fontFamily: 'Inter-Bold', fontSize: 20, color: '#1E293B', marginBottom: 20},

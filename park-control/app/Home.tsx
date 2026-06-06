@@ -7,6 +7,7 @@ import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
 import Card from '@ui/Card';
+import Feather from 'react-native-vector-icons/Feather';
 
 interface Community {
   id: number;
@@ -125,7 +126,7 @@ export default function Home({navigation}: Props) {
             <Text style={styles.greeting}>Hola, {app.user?.name?.split(' ')[0]}</Text>
             <TouchableOpacity style={styles.communitySelector} onPress={() => setShowSelector(true)}>
               <Text style={styles.communityName} numberOfLines={1}>{selectedCommunity?.name}</Text>
-              <Text style={styles.chevron}>▾</Text>
+              <Feather name="chevron-down" size={16} color="#2563EB" style={{marginTop: 2}} />
             </TouchableOpacity>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
@@ -148,7 +149,9 @@ export default function Home({navigation}: Props) {
             <Text style={styles.sectionTitle}>Disponibilidad ahora</Text>
             <View style={styles.availRow}>
               <Card style={styles.availCard}>
-                <Text style={styles.availIcon}>🚗</Text>
+                <View style={styles.availIconWrapper}>
+                  <Feather name="truck" size={20} color="#2563EB" />
+                </View>
                 <Text style={styles.availNumber}>{avail.visitor_available}</Text>
                 <Text style={styles.availLabel}>Libres</Text>
                 <Text style={styles.availSub}>de {avail.visitor_total} totales</Text>
@@ -160,7 +163,9 @@ export default function Home({navigation}: Props) {
                 </View>
               </Card>
               <Card style={styles.availCard}>
-                <Text style={styles.availIcon}>♿</Text>
+                <View style={[styles.availIconWrapper, {backgroundColor: '#F5F3FF'}]}>
+                  <Feather name="heart" size={20} color="#7C3AED" />
+                </View>
                 <Text style={styles.availNumber}>{avail.disabled_available}</Text>
                 <Text style={styles.availLabel}>Libres</Text>
                 <Text style={styles.availSub}>de {avail.disabled_total} totales</Text>
@@ -264,7 +269,7 @@ const styles = StyleSheet.create({
   sectionTitle: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#475569', marginBottom: 12},
   availRow: {flexDirection: 'row', gap: 12},
   availCard: {flex: 1},
-  availIcon: {fontSize: 24, marginBottom: 8},
+  availIconWrapper: {width: 36, height: 36, borderRadius: 10, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 10},
   availNumber: {fontFamily: 'Inter', fontSize: 36, fontWeight: '800', color: '#1E293B'},
   availLabel: {fontFamily: 'Inter', fontSize: 13, color: '#64748B'},
   availSub: {fontFamily: 'Inter', fontSize: 11, color: '#94A3B8', marginTop: 2},
