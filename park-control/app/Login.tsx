@@ -3,11 +3,15 @@ import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, SafeAreaView, Alert,
 } from 'react-native';
+import type {NativeStackScreenProps} from '@react-navigation/native-stack';
+import type {AuthStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
 import Button from '@ui/Button';
 import Input from '@ui/Input';
 
-export default function Login() {
+type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
+
+export default function Login({navigation}: Props) {
   const app = useContext(Context);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,8 +42,6 @@ export default function Login() {
     setLoading(true);
     try {
       await app.api.register(name, email, password, password);
-      const data = await app.api.register(name, email, password, password);
-      // After register, login
       await app.login(email, password);
     } catch (e: any) {
       Alert.alert('Error', e.message || 'Error al registrarse');
@@ -83,7 +85,7 @@ export default function Login() {
           <Input label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry secureToggle />
 
           {mode === 'login' && (
-            <TouchableOpacity style={styles.forgotBtn}>
+            <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
               <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
             </TouchableOpacity>
           )}

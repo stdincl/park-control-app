@@ -53,6 +53,19 @@ const api = {
   forgotPassword: (email: string) =>
     request<{message: string}>('POST', '/api/auth/forgot-password', {email}),
 
+  resetPassword: (token: string, email: string, password: string, passwordConfirmation: string) =>
+    request<{message: string}>('POST', '/api/auth/reset-password', {
+      token, email, password, password_confirmation: passwordConfirmation,
+    }),
+
+  changePassword: (currentPassword: string, password: string, passwordConfirmation: string) =>
+    request<{message: string}>('POST', '/api/auth/change-password', {
+      current_password: currentPassword, password, password_confirmation: passwordConfirmation,
+    }),
+
+  updateProfile: (name: string) =>
+    request<{user: any; message: string}>('PATCH', '/api/auth/profile', {name}),
+
   logout: () => request<{message: string}>('POST', '/api/auth/logout'),
 
   me: () => request<{user: any}>('GET', '/api/auth/me'),

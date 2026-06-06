@@ -8,14 +8,18 @@ import Context from './park-control/ctx/Contexto';
 import Login from '@app/Login';
 import Home from '@app/Home';
 import JoinCommunity from '@app/JoinCommunity';
+import Profile from '@app/Profile';
+import ForgotPassword from '@app/ForgotPassword';
 
 export type RootStackParamList = {
   Home: undefined;
   JoinCommunity: {fromSelector?: boolean};
+  Profile: undefined;
 };
 
 export type AuthStackParamList = {
   Login: undefined;
+  ForgotPassword: undefined;
 };
 
 const RootStack = createNativeStackNavigator<RootStackParamList>();
@@ -57,6 +61,11 @@ function AppNavigator() {
     return (
       <AuthStack.Navigator screenOptions={{headerShown: false}}>
         <AuthStack.Screen name="Login" component={Login} />
+        <AuthStack.Screen
+          name="ForgotPassword"
+          component={ForgotPassword}
+          options={{presentation: 'modal'}}
+        />
       </AuthStack.Navigator>
     );
   }
@@ -67,6 +76,11 @@ function AppNavigator() {
       <RootStack.Screen
         name="JoinCommunity"
         component={JoinCommunity}
+        options={{presentation: 'modal'}}
+      />
+      <RootStack.Screen
+        name="Profile"
+        component={Profile}
         options={{presentation: 'modal'}}
       />
     </RootStack.Navigator>

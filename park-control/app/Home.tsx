@@ -128,8 +128,10 @@ export default function Home({navigation}: Props) {
               <Text style={styles.chevron}>▾</Text>
             </TouchableOpacity>
           </View>
-          <TouchableOpacity onPress={app.logout} style={styles.logoutBtn}>
-            <Text style={styles.logoutText}>Salir</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
+            <View style={styles.profileAvatar}>
+              <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -253,8 +255,9 @@ const styles = StyleSheet.create({
   communitySelector: {flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2},
   communityName: {fontFamily: 'Inter', fontSize: 20, fontWeight: '700', color: '#1E293B', maxWidth: 240},
   chevron: {fontSize: 16, color: '#2563EB'},
-  logoutBtn: {paddingTop: 6},
-  logoutText: {fontFamily: 'Inter', fontSize: 13, color: '#94A3B8'},
+  profileBtn: {paddingTop: 4},
+  profileAvatar: {width: 38, height: 38, borderRadius: 19, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center'},
+  profileInitial: {fontFamily: 'Inter', fontSize: 16, fontWeight: '700', color: '#fff'},
   subWarning: {marginHorizontal: 20, padding: 12, backgroundColor: '#FEF9C3', borderRadius: 10, marginBottom: 8},
   subWarningText: {fontFamily: 'Inter', fontSize: 13, color: '#854D0E', textAlign: 'center'},
   availSection: {paddingHorizontal: 20, marginBottom: 24},
