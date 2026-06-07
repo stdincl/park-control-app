@@ -4,10 +4,7 @@ apply plugin: "com.facebook.react"
 apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
 
 
-plugins {
-  // Add the Google services Gradle plugin
-  id 'com.google.gms.google-services'
-}
+apply plugin: 'com.google.gms.google-services'
 
 /**
  * This is the configuration block to customize your React Native Android app.
@@ -85,6 +82,9 @@ android {
     compileSdk rootProject.ext.compileSdkVersion
 
     namespace "com.parkcontrolapp"
+    kotlinOptions {
+        freeCompilerArgs += ["-Xskip-metadata-version-check"]
+    }
     defaultConfig {
         applicationId "com.parkcontrolapp"
         minSdkVersion rootProject.ext.minSdkVersion
