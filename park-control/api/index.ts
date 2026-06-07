@@ -9,9 +9,14 @@ const API_BASE = __DEV__
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 let authToken: string | null = null;
+let onUnauthorized: (() => void) | null = null;
 
 export function setToken(token: string | null): void {
   authToken = token;
+}
+
+export function setUnauthorizedHandler(handler: () => void): void {
+  onUnauthorized = handler;
 }
 
 async function request<T>(method: Method, path: string, body?: object): Promise<T> {
@@ -30,6 +35,11 @@ async function request<T>(method: Method, path: string, body?: object): Promise<
   });
 
   const data = await res.json();
+
+  if (res.status === 401 && onUnauthorized) {
+    onUnauthorized();
+    throw new Error('Sesión expirada');
+  }
 
   if (!res.ok) {
     throw new Error(data.error || 'Error en la solicitud');

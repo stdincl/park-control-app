@@ -1,6 +1,6 @@
 import React, {createContext, useContext, useState, useEffect, useCallback} from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api, {setToken} from '@api/index';
+import api, {setToken, setUnauthorizedHandler} from '@api/index';
 
 interface User {
   id: number;
@@ -73,6 +73,16 @@ export function ContextProvider({children}: {children: React.ReactNode}) {
     setUser(null);
     await AsyncStorage.removeItem('@pc_token');
     await AsyncStorage.removeItem('@pc_user');
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(async () => {
+      setToken(null);
+      setTokenState(null);
+      setUser(null);
+      await AsyncStorage.removeItem('@pc_token');
+      await AsyncStorage.removeItem('@pc_user');
+    });
   }, []);
 
   return (
