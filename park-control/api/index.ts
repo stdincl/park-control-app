@@ -109,9 +109,9 @@ const api = {
   getCommunityReservations: (communityId: number) =>
     request<{reservations_enabled: boolean; reservations: any[]}>('GET', `/api/owner/communities/${communityId}/reservations`),
 
-  createReservation: (communityId: number, vehicles: number, date: string, timeFrom: string, timeTo: string) =>
+  createReservation: (communityId: number, vehicles: number, date: string, timeFrom: string, duration: number) =>
     request<{reservation: any}>('POST', '/api/owner/reservations', {
-      community_id: communityId, vehicles, date, time_from: timeFrom, time_to: timeTo,
+      community_id: communityId, vehicles, date, time_from: timeFrom, duration,
     }),
 
   // Plans

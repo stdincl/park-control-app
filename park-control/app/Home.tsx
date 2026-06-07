@@ -156,9 +156,12 @@ export default function Home({navigation}: Props) {
     return rem > 0 ? `${h}h ${rem} min` : `${h}h`;
   };
 
-  const formatTime = (iso: string) => {
+  const formatDateTime = (iso: string) => {
     try {
-      return new Date(iso).toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'});
+      const d = new Date(iso);
+      const date = d.toLocaleDateString('es-CL', {day: '2-digit', month: '2-digit'});
+      const time = d.toLocaleTimeString('es-CL', {hour: '2-digit', minute: '2-digit'});
+      return `${date} · ${time}`;
     } catch { return ''; }
   };
 
@@ -171,7 +174,7 @@ export default function Home({navigation}: Props) {
       {/* Hero / Community banner — fixed, not scrollable */}
       <ImageBackground
         source={bannerUri ? {uri: bannerUri} : undefined}
-        style={[styles.hero, !bannerUri && {backgroundColor: '#1E40AF'}]}
+        style={styles.hero}
         imageStyle={styles.heroBgImage}>
         <View style={styles.heroOverlay} />
 
@@ -187,6 +190,20 @@ export default function Home({navigation}: Props) {
             <TouchableOpacity onPress={onRefresh} style={styles.heroIconBtn} disabled={refreshing}>
               <Feather name="refresh-cw" size={16} color="rgba(255,255,255,0.85)" />
             </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.heroIconBtn}
+              onPress={() => {
+                if ((selectedCommunity as any).reservations_enabled) {
+                  navigation.navigate('Reservations', {
+                    communityId: selectedCommunity!.id,
+                    communityName: selectedCommunity!.name,
+                  });
+                } else {
+                  Alert.alert('Reservas no disponibles', 'El sistema de reservas no está habilitado en esta comunidad.');
+                }
+              }}>
+              <Feather name="calendar" size={16} color="rgba(255,255,255,0.85)" />
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={styles.profileBtn}>
               <View style={styles.profileAvatar}>
                 <Text style={styles.profileInitial}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
@@ -198,7 +215,7 @@ export default function Home({navigation}: Props) {
         {avail && (
           <View style={styles.heroBig}>
             <Text style={styles.heroBigNumber}>{totalAvailable}</Text>
-            <Text style={styles.heroBigLabel}>de {totalSpots} espacios libres</Text>
+            <Text style={styles.heroBigLabel}>estacionamientos disponibles</Text>
             <View style={styles.heroMeta}>
               <View style={styles.heroMetaItem}>
                 <Feather name="map-pin" size={12} color="rgba(255,255,255,0.6)" />
@@ -213,32 +230,6 @@ export default function Home({navigation}: Props) {
           </View>
         )}
 
-        {avail && (
-          <View style={styles.heroCards}>
-            <View style={styles.heroCard}>
-              <Feather name="truck" size={14} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.heroCardNum}>{avail.visitor_available}</Text>
-              <Text style={styles.heroCardLabel}>Visita</Text>
-              <View style={styles.heroProgressBg}>
-                <View style={[styles.heroProgressFill, {
-                  width: `${avail.visitor_total > 0 ? (avail.visitor_used / avail.visitor_total) * 100 : 0}%`,
-                  backgroundColor: avail.visitor_available === 0 ? '#FCA5A5' : '#93C5FD',
-                }]} />
-              </View>
-            </View>
-            <View style={[styles.heroCard, {borderLeftWidth: 1, borderLeftColor: 'rgba(255,255,255,0.15)'}]}>
-              <Feather name="heart" size={14} color="rgba(255,255,255,0.8)" />
-              <Text style={styles.heroCardNum}>{avail.disabled_available}</Text>
-              <Text style={styles.heroCardLabel}>Accesible</Text>
-              <View style={styles.heroProgressBg}>
-                <View style={[styles.heroProgressFill, {
-                  width: `${avail.disabled_total > 0 ? (avail.disabled_used / avail.disabled_total) * 100 : 0}%`,
-                  backgroundColor: '#C4B5FD',
-                }]} />
-              </View>
-            </View>
-          </View>
-        )}
       </ImageBackground>
 
       {/* Scrollable body — only vehicles list scrolls, header stays fixed */}
@@ -249,36 +240,6 @@ export default function Home({navigation}: Props) {
         {selectedCommunity && !selectedCommunity.subscription_active && (
           <View style={styles.subWarning}>
             <Text style={styles.subWarningText}>La suscripción de esta comunidad está vencida</Text>
-          </View>
-        )}
-
-        {/* Reservations quick action */}
-        {selectedCommunity && (
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={[
-                styles.actionBtn,
-                !(selectedCommunity as any).reservations_enabled && styles.actionBtnDisabled,
-              ]}
-              onPress={() => {
-                if ((selectedCommunity as any).reservations_enabled) {
-                  navigation.navigate('Reservations', {
-                    communityId: selectedCommunity.id,
-                    communityName: selectedCommunity.name,
-                  });
-                } else {
-                  Alert.alert(
-                    'Reservas no disponibles',
-                    'El sistema de reservas no está habilitado en esta comunidad.',
-                  );
-                }
-              }}>
-              <Feather name="calendar" size={16} color={(selectedCommunity as any).reservations_enabled ? '#2563EB' : '#94A3B8'} />
-              <Text style={[
-                styles.actionBtnText,
-                !(selectedCommunity as any).reservations_enabled && styles.actionBtnTextDisabled,
-              ]}>Reservar</Text>
-            </TouchableOpacity>
           </View>
         )}
 
@@ -294,20 +255,20 @@ export default function Home({navigation}: Props) {
                 <View style={styles.vehicleRow}>
                   <View style={[styles.vehicleBadge, v.overtime_minutes > 0 && styles.vehicleBadgeOver]}>
                     <Text style={styles.vehiclePlate}>{v.plate}</Text>
-                    {v.disabled_spot && <Feather name="heart" size={10} color="#7C3AED" style={{marginTop: 2}} />}
                   </View>
                   <View style={styles.vehicleInfo}>
-                    <Text style={styles.vehicleVisitor} numberOfLines={1}>{v.visitor_name}</Text>
-                    <Text style={styles.vehicleDest} numberOfLines={1}>{v.destination}</Text>
-                    <Text style={styles.vehicleReceptor} numberOfLines={1}>Recibido por {v.receptor_name}</Text>
+                    <Text style={styles.vehicleReceptor} numberOfLines={1}>por {v.receptor_name}</Text>
+                    <Text style={styles.vehicleEnteredAt} numberOfLines={1}>{formatDateTime(v.entered_at)}</Text>
                   </View>
                   <View style={styles.vehicleTime}>
-                    <Text style={styles.vehicleEnteredAt}>{formatTime(v.entered_at)}</Text>
                     <Text style={[styles.vehicleMinutes, v.overtime_minutes > 0 && styles.vehicleOver]}>
                       {formatMinutes(v.minutes)}
                     </Text>
                     {v.overtime_minutes > 0 && (
-                      <Text style={styles.vehicleOvertimeLabel}>+{formatMinutes(v.overtime_minutes)}</Text>
+                      <View style={styles.vehicleOverBadge}>
+                        <Feather name="alert-triangle" size={10} color="#EF4444" />
+                        <Text style={styles.vehicleOvertimeLabel}>+{formatMinutes(v.overtime_minutes)}</Text>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -316,7 +277,7 @@ export default function Home({navigation}: Props) {
           )}
         </View>
 
-        <View style={{height: 40}} />
+        <View style={{height: 24}} />
       </ScrollView>
 
       {/* Community selector modal */}
@@ -371,10 +332,11 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 28,
     borderBottomRightRadius: 28,
     overflow: 'hidden',
+    backgroundColor: '#1E40AF',
   },
   heroBgImage: {borderBottomLeftRadius: 28, borderBottomRightRadius: 28},
   heroOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: '#1E40AF',
     opacity: 0.82,
     borderBottomLeftRadius: 28,
@@ -408,24 +370,23 @@ const styles = StyleSheet.create({
   sectionTitle: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#475569', marginBottom: 12},
   vehiclesSection: {padding: 20, gap: 8},
   vehicleCard: {marginBottom: 0},
-  vehicleRow: {flexDirection: 'row', alignItems: 'flex-start', gap: 12},
-  vehicleBadge: {backgroundColor: '#EFF6FF', paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, alignItems: 'center', minWidth: 64},
+  vehicleRow: {flexDirection: 'row', alignItems: 'center', gap: 12},
+  vehicleBadge: {backgroundColor: '#EFF6FF', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, alignItems: 'center', minWidth: 72},
   vehicleBadgeOver: {backgroundColor: '#FEF2F2'},
-  vehiclePlate: {fontFamily: 'Inter', fontWeight: '700', fontSize: 13, color: '#1E293B'},
+  vehiclePlate: {fontFamily: 'Inter', fontWeight: '800', fontSize: 14, color: '#1E293B', letterSpacing: 0.5},
   vehicleInfo: {flex: 1},
-  vehicleVisitor: {fontFamily: 'Inter', fontSize: 14, fontWeight: '500', color: '#1E293B'},
-  vehicleDest: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginTop: 1},
-  vehicleReceptor: {fontFamily: 'Inter', fontSize: 11, color: '#94A3B8', marginTop: 3},
-  vehicleTime: {alignItems: 'flex-end'},
-  vehicleEnteredAt: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginBottom: 2},
-  vehicleMinutes: {fontFamily: 'Inter', fontSize: 13, fontWeight: '600', color: '#1E293B'},
+  vehicleReceptor: {fontFamily: 'Inter', fontSize: 12, fontWeight: '500', color: '#475569'},
+  vehicleEnteredAt: {fontFamily: 'Inter', fontSize: 11, color: '#94A3B8', marginTop: 2},
+  vehicleTime: {alignItems: 'flex-end', gap: 4},
+  vehicleMinutes: {fontFamily: 'Inter', fontSize: 14, fontWeight: '700', color: '#1E293B'},
   vehicleOver: {color: '#EF4444'},
-  vehicleOvertimeLabel: {fontFamily: 'Inter', fontSize: 11, color: '#EF4444', marginTop: 2},
+  vehicleOverBadge: {flexDirection: 'row', alignItems: 'center', gap: 3, backgroundColor: '#FEF2F2', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6},
+  vehicleOvertimeLabel: {fontFamily: 'Inter', fontSize: 11, fontWeight: '600', color: '#EF4444'},
   noVehicles: {fontFamily: 'Inter', fontSize: 14, color: '#94A3B8', textAlign: 'center'},
-  actionsRow: {paddingHorizontal: 20, paddingTop: 16, paddingBottom: 4, flexDirection: 'row', gap: 10},
-  actionBtn: {flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12, backgroundColor: '#EFF6FF', borderWidth: 1, borderColor: '#BFDBFE'},
-  actionBtnDisabled: {backgroundColor: '#F1F5F9', borderColor: '#E2E8F0'},
-  actionBtnText: {fontFamily: 'Inter', fontSize: 14, fontWeight: '600', color: '#2563EB'},
+  bottomBar: {paddingHorizontal: 20, paddingTop: 12, backgroundColor: '#F8FAFC', borderTopWidth: 1, borderTopColor: '#E2E8F0'},
+  actionBtn: {flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, paddingVertical: 16, borderRadius: 14, borderWidth: 2, borderColor: '#2563EB', backgroundColor: 'transparent'},
+  actionBtnDisabled: {borderColor: '#CBD5E1', backgroundColor: 'transparent'},
+  actionBtnText: {fontFamily: 'Inter', fontSize: 16, fontWeight: '700', color: '#2563EB'},
   actionBtnTextDisabled: {color: '#94A3B8'},
   modalOverlay: {position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'},
   modal: {backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, paddingBottom: 40},

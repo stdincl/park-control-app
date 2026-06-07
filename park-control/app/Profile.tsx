@@ -1,8 +1,9 @@
 import React, {useContext, useState, useEffect, useCallback} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, SafeAreaView, Alert, ActivityIndicator,
+  StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {RootStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
@@ -124,7 +125,7 @@ export default function Profile({navigation}: Props) {
   const initial = (app.user?.name || 'U').charAt(0).toUpperCase();
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top']}>
       <View style={styles.header}>
         <TouchableOpacity
           onPress={() => section !== 'main' ? setSection('main') : navigation.goBack()}
