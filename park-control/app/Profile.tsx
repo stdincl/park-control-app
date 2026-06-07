@@ -1,4 +1,4 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext, useState, useEffect, useCallback} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, SafeAreaView, Alert, ActivityIndicator,
@@ -11,10 +11,19 @@ import Feather from 'react-native-vector-icons/Feather';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Profile'>;
 
+interface Community {
+  id: number;
+  name: string;
+  comune: string;
+  is_home: boolean;
+}
+
 export default function Profile({navigation}: Props) {
   const app = useContext(Context);
 
   const [section, setSection] = useState<'main' | 'editName' | 'changePassword'>('main');
+  const [communities, setCommunities] = useState<Community[]>([]);
+  const [leavingId, setLeavingId] = useState<number | null>(null);
 
   // Name edit
   const [newName, setNewName] = useState(app.user?.name || '');
@@ -69,6 +78,40 @@ export default function Profile({navigation}: Props) {
     } finally {
       setSavingPwd(false);
     }
+  };
+
+  const loadCommunities = useCallback(async () => {
+    try {
+      const data = await app.api.getMyCommunities();
+      setCommunities(data.communities || []);
+    } catch {}
+  }, []);
+
+  useEffect(() => { loadCommunities(); }, [loadCommunities]);
+
+  const handleLeaveCommunity = (community: Community) => {
+    Alert.alert(
+      'Salir de la comunidad',
+      `¿Seguro que deseas salir de "${community.name}"? Perderás el acceso y necesitarás un código nuevo para volver.`,
+      [
+        {text: 'Cancelar', style: 'cancel'},
+        {
+          text: 'Salir',
+          style: 'destructive',
+          onPress: async () => {
+            setLeavingId(community.id);
+            try {
+              await app.api.leaveCommunity(community.id);
+              await loadCommunities();
+            } catch (e: any) {
+              Alert.alert('Error', e.message || 'No se pudo salir de la comunidad');
+            } finally {
+              setLeavingId(null);
+            }
+          },
+        },
+      ],
+    );
   };
 
   const handleLogout = () => {
@@ -131,6 +174,32 @@ export default function Profile({navigation}: Props) {
 
             <View style={styles.section}>
               <Text style={styles.sectionLabel}>Comunidades</Text>
+
+              {communities.map(c => (
+                <View key={c.id} style={styles.communityRow}>
+                  <View style={styles.communityInfo}>
+                    <View style={[styles.rowIcon, {backgroundColor: '#EEF2FF'}]}>
+                      <Feather name="home" size={16} color="#6366F1" />
+                    </View>
+                    <View style={{flex: 1}}>
+                      <Text style={styles.communityName} numberOfLines={1}>{c.name}</Text>
+                      <Text style={styles.communityComune}>{c.comune}{c.is_home ? ' · Principal' : ''}</Text>
+                    </View>
+                  </View>
+                  {leavingId === c.id
+                    ? <ActivityIndicator size="small" color="#EF4444" style={{padding: 8}} />
+                    : (
+                      <TouchableOpacity
+                        style={styles.leaveBtn}
+                        onPress={() => handleLeaveCommunity(c)}>
+                        <Feather name="log-out" size={14} color="#EF4444" />
+                        <Text style={styles.leaveBtnText}>Salir</Text>
+                      </TouchableOpacity>
+                    )
+                  }
+                </View>
+              ))}
+
               <TouchableOpacity style={styles.row} onPress={() => navigation.navigate('JoinCommunity', {})}>
                 <View style={styles.rowLeft}>
                   <View style={[styles.rowIcon, {backgroundColor: '#F0F9FF'}]}>
@@ -254,6 +323,20 @@ const styles = StyleSheet.create({
   rowText: {fontFamily: 'Inter-Medium', fontSize: 15, color: '#1E293B'},
   logoutText: {color: '#EF4444'},
   version: {fontFamily: 'Inter-Regular', fontSize: 12, color: '#CBD5E1', textAlign: 'center', marginTop: 20},
+  communityRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#fff', borderRadius: 14, padding: 14, marginBottom: 6,
+    borderWidth: 1, borderColor: '#F1F5F9',
+  },
+  communityInfo: {flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1, marginRight: 8},
+  communityName: {fontFamily: 'Inter-Medium', fontSize: 14, color: '#1E293B'},
+  communityComune: {fontFamily: 'Inter-Regular', fontSize: 12, color: '#94A3B8', marginTop: 1},
+  leaveBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 6,
+    backgroundColor: '#FEF2F2', borderRadius: 8, borderWidth: 1, borderColor: '#FECACA',
+  },
+  leaveBtnText: {fontFamily: 'Inter-SemiBold', fontSize: 12, color: '#EF4444'},
   formSection: {padding: 24},
   formTitle: {fontFamily: 'Inter-Bold', fontSize: 20, color: '#1E293B', marginBottom: 20},
   saveBtn: {backgroundColor: '#2563EB', paddingVertical: 15, borderRadius: 14, alignItems: 'center', marginTop: 8},
