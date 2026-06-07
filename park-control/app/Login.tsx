@@ -66,9 +66,9 @@ export default function Login({navigation}: Props) {
       const tokens = await GoogleSignin.getTokens();
       await app.loginWithGoogle(tokens.idToken);
     } catch (e: any) {
-      // Code 12501 = cancelled on Android, SIGN_IN_CANCELLED on iOS
-      if (e.code !== 'SIGN_IN_CANCELLED' && e.code !== '12501') {
-        Alert.alert('Error con Google', e.message || 'No se pudo iniciar sesión con Google');
+      const cancelled = ['SIGN_IN_CANCELLED', '12501', 'SIGN_IN_REQUIRED'].includes(e.code);
+      if (!cancelled) {
+        Alert.alert('Error con Google', 'No se pudo iniciar sesión con Google. Por favor inténtalo nuevamente.');
       }
     } finally {
       setSocialLoading(null);
@@ -123,9 +123,10 @@ export default function Login({navigation}: Props) {
         }
       }
     } catch (e: any) {
-      // 1001 = iOS cancelled, E_SIGNIN_CANCELLED = Android cancelled
-      if (e.code !== '1001' && e.code !== appleAuthAndroid?.Error?.SIGNIN_CANCELLED) {
-        Alert.alert('Apple ID', e.message || 'No se pudo iniciar sesión con Apple ID');
+      const cancelCodes = ['1001', 'ERR_CANCELED', appleAuthAndroid?.Error?.SIGNIN_CANCELLED];
+      const cancelled = cancelCodes.includes(e.code);
+      if (!cancelled) {
+        Alert.alert('Apple ID', 'No se pudo iniciar sesión con Apple ID. Por favor inténtalo nuevamente.');
       }
     } finally {
       setSocialLoading(null);

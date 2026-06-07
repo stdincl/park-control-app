@@ -16,8 +16,8 @@ import Reservations from '@app/Reservations';
 // Configure Google Sign-In once at app startup
 // Replace GOOGLE_WEB_CLIENT_ID with the real Web Client ID from Google Cloud Console
 // See AUTH.md for instructions on how to obtain this value
-const GOOGLE_WEB_CLIENT_ID = 'PLACEHOLDER_WEB_CLIENT_ID.apps.googleusercontent.com';
-const GOOGLE_IOS_CLIENT_ID = 'PLACEHOLDER_IOS_CLIENT_ID.apps.googleusercontent.com';
+const GOOGLE_WEB_CLIENT_ID = '826303020914-tevd9dm1gd27f5cg3hppmrqgkopf91jo.apps.googleusercontent.com';
+const GOOGLE_IOS_CLIENT_ID = '826303020914-qlud9crvo0sj3tleh8c85qiu17vjeq5q.apps.googleusercontent.com';
 GoogleSignin.configure({webClientId: GOOGLE_WEB_CLIENT_ID, iosClientId: GOOGLE_IOS_CLIENT_ID, offlineAccess: true});
 
 export type RootStackParamList = {

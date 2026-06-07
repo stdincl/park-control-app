@@ -125,6 +125,14 @@ export default function Home({navigation}: Props) {
     return (
       <View style={[styles.safe, {paddingTop: insets.top}]}>
         <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
+        {/* Profile button top-right */}
+        <View style={styles.emptyHeader}>
+          <TouchableOpacity style={styles.emptyProfileBtn} onPress={() => navigation.navigate('Profile')}>
+            <View style={styles.emptyAvatar}>
+              <Text style={styles.emptyAvatarText}>{(app.user?.name || 'U').charAt(0).toUpperCase()}</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
         <View style={styles.empty}>
           <View style={styles.emptyIcon}><Text style={styles.emptyP}>P</Text></View>
           <Text style={styles.emptyTitle}>No estás en ninguna comunidad</Text>
@@ -313,7 +321,7 @@ export default function Home({navigation}: Props) {
 
       {/* Community selector modal */}
       {showSelector && (
-        <View style={styles.modalOverlay}>
+        <View style={[styles.modalOverlay, {paddingTop: insets.top}]}>
           <View style={[styles.modal, {paddingBottom: insets.bottom + 24}]}>
             <Text style={styles.modalTitle}>Cambiar comunidad</Text>
             {communities.map(c => (
@@ -345,6 +353,10 @@ const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: '#F8FAFC'},
   body: {flex: 1, backgroundColor: '#F8FAFC'},
   loading: {flex: 1, alignItems: 'center', justifyContent: 'center'},
+  emptyHeader: {flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 20, paddingTop: 12},
+  emptyProfileBtn: {},
+  emptyAvatar: {width: 38, height: 38, borderRadius: 19, backgroundColor: '#E0E7FF', alignItems: 'center', justifyContent: 'center'},
+  emptyAvatarText: {fontFamily: 'Inter-Bold', fontSize: 16, color: '#4F46E5'},
   empty: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40},
   emptyIcon: {width: 80, height: 80, borderRadius: 22, backgroundColor: '#EFF6FF', alignItems: 'center', justifyContent: 'center', marginBottom: 20},
   emptyP: {fontSize: 36, fontWeight: '800', color: '#2563EB'},

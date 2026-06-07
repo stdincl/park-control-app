@@ -1,7 +1,7 @@
 import React, {useContext, useState, useCallback, useEffect} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, StyleSheet,
-  ActivityIndicator, Modal, TextInput, Alert,
+  ActivityIndicator, Modal, TextInput, Alert, StatusBar,
 } from 'react-native';
 import {SafeAreaView, useSafeAreaInsets} from 'react-native-safe-area-context';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
@@ -171,8 +171,9 @@ export default function Reservations({navigation, route}: Props) {
       )}
 
       {/* Modal: Nueva reserva */}
-      <Modal visible={showForm} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
+      <Modal visible={showForm} animationType="slide" transparent statusBarTranslucent onRequestClose={() => setShowForm(false)}>
+        <StatusBar translucent backgroundColor="rgba(0,0,0,0.5)" barStyle="light-content" />
+        <View style={[styles.modalOverlay, {paddingTop: insets.top}]}>
           <View style={[styles.modalSheet, {paddingBottom: insets.bottom + 24}]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Nueva reserva</Text>
