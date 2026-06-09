@@ -8,7 +8,7 @@ import type {AuthStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
 import Button from '@ui/Button';
 import Input from '@ui/Input';
-import Feather from 'react-native-vector-icons/Feather';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {appleAuth, appleAuthAndroid} from '@invertase/react-native-apple-authentication';
 
@@ -199,7 +199,7 @@ export default function Login({navigation}: Props) {
               <ActivityIndicator size="small" color="#1E293B" />
             ) : (
               <>
-                <GoogleIcon />
+                <FontAwesome5 name="google" size={18} color="#EA4335" brand />
                 <Text style={styles.socialBtnText}>Google</Text>
               </>
             )}
@@ -214,7 +214,7 @@ export default function Login({navigation}: Props) {
               <ActivityIndicator size="small" color="#fff" />
             ) : (
               <>
-                <Feather name="smartphone" size={18} color="#fff" />
+                <FontAwesome5 name="apple" size={20} color="#fff" brand />
                 <Text style={[styles.socialBtnText, styles.appleSocialBtnText]}>Apple ID</Text>
               </>
             )}
@@ -229,14 +229,6 @@ export default function Login({navigation}: Props) {
         )}
       </ScrollView>
     </SafeAreaView>
-  );
-}
-
-function GoogleIcon() {
-  return (
-    <View style={styles.googleIcon}>
-      <Text style={styles.googleG}>G</Text>
-    </View>
   );
 }
 
@@ -276,11 +268,6 @@ const styles = StyleSheet.create({
   appleSocialBtn: {backgroundColor: '#000', borderColor: '#000'},
   socialBtnText: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#1E293B'},
   appleSocialBtnText: {color: '#fff'},
-  googleIcon: {
-    width: 18, height: 18, borderRadius: 9,
-    backgroundColor: '#EA4335', alignItems: 'center', justifyContent: 'center',
-  },
-  googleG: {fontFamily: 'Inter', fontSize: 11, fontWeight: '800', color: '#fff'},
   hint: {
     fontFamily: 'Inter', fontSize: 12, color: '#94A3B8',
     textAlign: 'center', marginTop: 24, lineHeight: 18,
