@@ -1,10 +1,4 @@
-import {Platform} from 'react-native';
-
-const API_BASE = __DEV__
-  ? Platform.OS === 'android'
-    ? 'http://10.0.2.2:8001'
-    : 'http://local.parkcontrol.api.stdin.cl:8001'
-  : 'https://parkcontrol.api.stdin.cl';
+const API_BASE = 'https://parkcontrol.api.stdin.cl';
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
@@ -88,8 +82,14 @@ const api = {
   getMyCommunities: () =>
     request<{communities: any[]}>('GET', '/api/owner/communities'),
 
-  searchCommunities: (comune: string, name?: string) =>
-    request<{communities: any[]}>('POST', '/api/owner/communities/search', {comune, name}),
+  getRegions: () =>
+    request<{regions: {reg_id: number; reg_name: string; reg_code: string}[]}>('GET', '/api/regions'),
+
+  getCommunes: (regId: number) =>
+    request<{communes: {cmu_id: number; reg_id: number; cmu_name: string}[]}>('GET', `/api/communes?reg_id=${regId}`),
+
+  searchCommunities: (cmuId: number, name?: string) =>
+    request<{communities: any[]}>('POST', '/api/owner/communities/search', {cmu_id: cmuId, name}),
 
   joinCommunity: (communityIdentifier: number, code: string) =>
     request<{message: string; community: any}>('POST', '/api/owner/communities/join', {

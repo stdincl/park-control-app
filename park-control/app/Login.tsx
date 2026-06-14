@@ -1,18 +1,19 @@
-import React, {useContext, useState} from 'react';
+import React, {useContext, useState, useEffect, useRef} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, SafeAreaView, Alert, Platform, ActivityIndicator,
+  StyleSheet, Alert, Platform, ActivityIndicator,
+  KeyboardAvoidingView, StatusBar, Animated, Easing,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../App';
 import Context from '@ctx/Contexto';
 import Button from '@ui/Button';
 import Input from '@ui/Input';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Feather from 'react-native-vector-icons/Feather';
 import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {appleAuth, appleAuthAndroid} from '@invertase/react-native-apple-authentication';
 
-// Apple Developer Services ID and redirect URI (set these after completing AUTH.md setup)
 const APPLE_SERVICE_ID = 'cl.stdin.parkcontrol.signin';
 const APPLE_REDIRECT_URI = 'https://parkcontrol.stdin.cl/auth/apple/callback';
 
@@ -26,6 +27,27 @@ export default function Login({navigation}: Props) {
   const [socialLoading, setSocialLoading] = useState<'google' | 'apple' | null>(null);
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
+
+  const logoAnim = useRef(new Animated.Value(0)).current;
+  const textAnim = useRef(new Animated.Value(0)).current;
+  const formFade = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.spring(logoAnim, {toValue: 1, tension: 55, friction: 7, useNativeDriver: true}),
+      Animated.sequence([
+        Animated.delay(150),
+        Animated.timing(textAnim, {toValue: 1, duration: 360, useNativeDriver: true, easing: Easing.out(Easing.cubic)}),
+      ]),
+    ]).start();
+  }, []);
+
+  const switchMode = (newMode: 'login' | 'register') => {
+    Animated.timing(formFade, {toValue: 0, duration: 90, useNativeDriver: true}).start(() => {
+      setMode(newMode);
+      Animated.timing(formFade, {toValue: 1, duration: 180, useNativeDriver: true}).start();
+    });
+  };
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -79,7 +101,6 @@ export default function Login({navigation}: Props) {
     setSocialLoading('apple');
     try {
       if (Platform.OS === 'ios') {
-        // Native iOS Sign In with Apple
         const response = await appleAuth.performRequest({
           requestedOperation: appleAuth.Operation.LOGIN,
           requestedScopes: [appleAuth.Scope.EMAIL, appleAuth.Scope.FULL_NAME],
@@ -98,10 +119,8 @@ export default function Login({navigation}: Props) {
           Alert.alert('Error', 'No se pudo verificar tu cuenta de Apple');
         }
       } else {
-        // Android: web OAuth flow via Apple Services ID
         const rawNonce = Math.random().toString(36).substring(2, 15);
         const state = Math.random().toString(36).substring(2, 15);
-
         appleAuthAndroid.configure({
           clientId: APPLE_SERVICE_ID,
           redirectUri: APPLE_REDIRECT_URI,
@@ -110,7 +129,6 @@ export default function Login({navigation}: Props) {
           nonce: rawNonce,
           state,
         });
-
         const response = await appleAuthAndroid.signIn();
         if (response?.id_token) {
           await app.loginWithApple(
@@ -124,8 +142,7 @@ export default function Login({navigation}: Props) {
       }
     } catch (e: any) {
       const cancelCodes = ['1001', 'ERR_CANCELED', appleAuthAndroid?.Error?.SIGNIN_CANCELLED];
-      const cancelled = cancelCodes.includes(e.code);
-      if (!cancelled) {
+      if (!cancelCodes.includes(e.code)) {
         Alert.alert('Apple ID', 'No se pudo iniciar sesión con Apple ID. Por favor inténtalo nuevamente.');
       }
     } finally {
@@ -134,140 +151,186 @@ export default function Login({navigation}: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        {/* Logo */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoIcon}>
-            <Text style={styles.logoP}>P</Text>
-          </View>
-          <Text style={styles.logoText}>ParkControl</Text>
-          <Text style={styles.logoSub}>Control de estacionamientos</Text>
-        </View>
+    <View style={styles.root}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F8FAFC" />
+      <SafeAreaView edges={['top', 'bottom']} style={styles.safe}>
+        <KeyboardAvoidingView
+          style={styles.keyboardView}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+          <ScrollView
+            contentContainerStyle={styles.scroll}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}>
 
-        {/* Tabs */}
-        <View style={styles.tabs}>
-          <TouchableOpacity
-            style={[styles.tab, mode === 'login' && styles.tabActive]}
-            onPress={() => setMode('login')}>
-            <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>Iniciar sesión</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.tab, mode === 'register' && styles.tabActive]}
-            onPress={() => setMode('register')}>
-            <Text style={[styles.tabText, mode === 'register' && styles.tabTextActive]}>Registrarse</Text>
-          </TouchableOpacity>
-        </View>
+            {/* Brand mark */}
+            <View style={styles.brand}>
+              <Animated.View style={[
+                styles.logoWrap,
+                {
+                  opacity: logoAnim,
+                  transform: [{scale: logoAnim.interpolate({inputRange: [0, 1], outputRange: [0.6, 1]})}],
+                },
+              ]}>
+                <Feather name="shield" size={28} color="#2563EB" />
+              </Animated.View>
+              <Animated.View style={{opacity: textAnim, alignItems: 'center'}}>
+                <Text style={styles.appName}>ParkControl</Text>
+                <Text style={styles.appSub}>Control de estacionamientos de visita</Text>
+              </Animated.View>
+            </View>
 
-        {/* Form */}
-        <View style={styles.form}>
-          {mode === 'register' && (
-            <Input label="Nombre completo" value={name} onChangeText={setName} placeholder="Juan García" autoCapitalize="words" />
-          )}
-          <Input label="Correo electrónico" value={email} onChangeText={setEmail} placeholder="tu@email.com" keyboardType="email-address" autoCapitalize="none" />
-          <Input label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry secureToggle />
+            {/* Mode tabs */}
+            <View style={styles.tabs}>
+              <TouchableOpacity
+                style={[styles.tab, mode === 'login' && styles.tabActive]}
+                onPress={() => switchMode('login')}>
+                <Text style={[styles.tabText, mode === 'login' && styles.tabTextActive]}>Iniciar sesión</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.tab, mode === 'register' && styles.tabActive]}
+                onPress={() => switchMode('register')}>
+                <Text style={[styles.tabText, mode === 'register' && styles.tabTextActive]}>Registrarse</Text>
+              </TouchableOpacity>
+            </View>
 
-          {mode === 'login' && (
-            <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
-            </TouchableOpacity>
-          )}
+            {/* Form */}
+            <Animated.View style={[styles.form, {opacity: formFade}]}>
+              {mode === 'register' && (
+                <Input label="Nombre completo" value={name} onChangeText={setName} placeholder="Juan García" autoCapitalize="words" />
+              )}
+              <Input label="Correo electrónico" value={email} onChangeText={setEmail} placeholder="tu@email.com" keyboardType="email-address" autoCapitalize="none" />
+              <Input label="Contraseña" value={password} onChangeText={setPassword} secureTextEntry secureToggle />
 
-          <Button
-            label={mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
-            onPress={mode === 'login' ? handleLogin : handleRegister}
-            loading={loading}
-            style={styles.submitBtn}
-          />
-        </View>
+              {mode === 'login' && (
+                <TouchableOpacity style={styles.forgotBtn} onPress={() => navigation.navigate('ForgotPassword')}>
+                  <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
+                </TouchableOpacity>
+              )}
 
-        {/* Social login divider */}
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>o continúa con</Text>
-          <View style={styles.dividerLine} />
-        </View>
+              <Button
+                label={mode === 'login' ? 'Iniciar sesión' : 'Crear cuenta'}
+                onPress={mode === 'login' ? handleLogin : handleRegister}
+                loading={loading}
+                style={styles.submitBtn}
+              />
+            </Animated.View>
 
-        {/* Social buttons */}
-        <View style={styles.socialRow}>
-          {/* Google — both platforms */}
-          <TouchableOpacity
-            style={styles.socialBtn}
-            onPress={handleGoogleSignIn}
-            disabled={socialLoading !== null}>
-            {socialLoading === 'google' ? (
-              <ActivityIndicator size="small" color="#1E293B" />
-            ) : (
-              <>
-                <FontAwesome5 name="google" size={18} color="#EA4335" brand />
-                <Text style={styles.socialBtnText}>Google</Text>
-              </>
+            {/* Divider */}
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>o continúa con</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            {/* Social */}
+            <View style={styles.socialRow}>
+              <TouchableOpacity style={styles.socialBtn} onPress={handleGoogleSignIn} disabled={socialLoading !== null}>
+                {socialLoading === 'google' ? (
+                  <ActivityIndicator size="small" color="#0F172A" />
+                ) : (
+                  <>
+                    <GoogleLogo size={18} />
+                    <Text style={styles.socialBtnText}>Google</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.socialBtn, styles.appleSocialBtn]} onPress={handleAppleSignIn} disabled={socialLoading !== null}>
+                {socialLoading === 'apple' ? (
+                  <ActivityIndicator size="small" color="#fff" />
+                ) : (
+                  <>
+                    <AppleLogo size={18} />
+                    <Text style={[styles.socialBtnText, styles.appleSocialBtnText]}>Apple ID</Text>
+                  </>
+                )}
+              </TouchableOpacity>
+            </View>
+
+            {mode === 'login' && (
+              <Text style={styles.hint}>
+                Esta app es para propietarios del condominio.{'\n'}
+                Administradores y recepción usan el panel web.
+              </Text>
             )}
-          </TouchableOpacity>
 
-          {/* Apple — both iOS and Android */}
-          <TouchableOpacity
-            style={[styles.socialBtn, styles.appleSocialBtn]}
-            onPress={handleAppleSignIn}
-            disabled={socialLoading !== null}>
-            {socialLoading === 'apple' ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <>
-                <FontAwesome5 name="apple" size={20} color="#fff" brand />
-                <Text style={[styles.socialBtnText, styles.appleSocialBtnText]}>Apple ID</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </View>
+  );
+}
 
-        {mode === 'login' && (
-          <Text style={styles.hint}>
-            Esta app es para propietarios del condominio.{'\n'}
-            Administradores y recepción usan el panel web.
-          </Text>
-        )}
-      </ScrollView>
-    </SafeAreaView>
+function GoogleLogo({size = 18}: {size?: number}) {
+  return (
+    <View style={{
+      width: size, height: size, borderRadius: size / 2,
+      borderWidth: 1.5, borderColor: '#EA4335',
+      alignItems: 'center', justifyContent: 'center',
+    }}>
+      <Text style={{fontSize: size * 0.6, fontWeight: '700', lineHeight: size, color: '#4285F4'}}>G</Text>
+    </View>
+  );
+}
+
+function AppleLogo({size = 18}: {size?: number}) {
+  return (
+    <Text style={{fontFamily: 'System', fontSize: size, color: '#fff', lineHeight: size + 2}}>
+      {''}
+    </Text>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: {flex: 1, backgroundColor: '#F8FAFC'},
-  scroll: {flexGrow: 1, padding: 24, justifyContent: 'center'},
-  logoSection: {alignItems: 'center', marginBottom: 40},
-  logoIcon: {
-    width: 64, height: 64, borderRadius: 18,
-    backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+  root: {flex: 1, backgroundColor: '#F8FAFC'},
+  safe: {flex: 1},
+  keyboardView: {flex: 1},
+  scroll: {flexGrow: 1, paddingHorizontal: 24, paddingBottom: 32},
+
+  brand: {alignItems: 'center', paddingTop: 52, paddingBottom: 36},
+  logoWrap: {
+    width: 68, height: 68, borderRadius: 20,
+    backgroundColor: 'rgba(37,99,235,0.08)',
+    borderWidth: 1, borderColor: 'rgba(37,99,235,0.15)',
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: 16,
   },
-  logoP: {fontFamily: 'Inter', fontSize: 32, fontWeight: '800', color: '#fff'},
-  logoText: {fontFamily: 'Inter', fontSize: 28, fontWeight: '800', color: '#1E293B'},
-  logoSub: {fontFamily: 'Inter', fontSize: 14, color: '#64748B', marginTop: 4},
+  appName: {fontFamily: 'Inter', fontSize: 26, fontWeight: '800', color: '#0F172A', marginBottom: 4},
+  appSub: {fontFamily: 'Inter', fontSize: 14, color: '#94A3B8', textAlign: 'center'},
+
   tabs: {
     flexDirection: 'row', backgroundColor: '#F1F5F9',
     borderRadius: 12, padding: 4, marginBottom: 24,
   },
   tab: {flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 10},
-  tabActive: {backgroundColor: '#fff', shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 4, elevation: 2},
-  tabText: {fontFamily: 'Inter', fontSize: 14, fontWeight: '500', color: '#64748B'},
-  tabTextActive: {color: '#1E293B', fontWeight: '600'},
+  tabActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#64748B', shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1, shadowRadius: 3, elevation: 2,
+  },
+  tabText: {fontFamily: 'Inter', fontSize: 14, fontWeight: '500', color: '#94A3B8'},
+  tabTextActive: {color: '#0F172A', fontWeight: '600'},
+
   form: {gap: 0},
-  forgotBtn: {alignSelf: 'flex-end', marginBottom: 16},
+  forgotBtn: {alignSelf: 'flex-end', marginTop: -4, marginBottom: 16},
   forgotText: {fontFamily: 'Inter', fontSize: 13, color: '#2563EB', fontWeight: '500'},
   submitBtn: {marginTop: 8},
+
   dividerRow: {flexDirection: 'row', alignItems: 'center', marginVertical: 24, gap: 12},
   dividerLine: {flex: 1, height: 1, backgroundColor: '#E2E8F0'},
   dividerText: {fontFamily: 'Inter', fontSize: 13, color: '#94A3B8'},
+
   socialRow: {flexDirection: 'row', gap: 12},
   socialBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     gap: 8, paddingVertical: 13, borderRadius: 14,
-    backgroundColor: '#fff', borderWidth: 1.5, borderColor: '#E2E8F0',
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
+    backgroundColor: '#FFFFFF', borderWidth: 1.5, borderColor: '#E2E8F0',
+    shadowColor: '#64748B', shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.06, shadowRadius: 3, elevation: 1,
   },
   appleSocialBtn: {backgroundColor: '#000', borderColor: '#000'},
-  socialBtnText: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#1E293B'},
+  socialBtnText: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#0F172A'},
   appleSocialBtnText: {color: '#fff'},
+
   hint: {
     fontFamily: 'Inter', fontSize: 12, color: '#94A3B8',
     textAlign: 'center', marginTop: 24, lineHeight: 18,

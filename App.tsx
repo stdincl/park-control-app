@@ -1,5 +1,6 @@
 import React, {useContext, useEffect, useRef} from 'react';
 import {StatusBar, Animated, View, StyleSheet, Text} from 'react-native';
+import Feather from 'react-native-vector-icons/Feather';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -48,10 +49,10 @@ function SplashScreen() {
 
   return (
     <View style={ss.splash}>
-      <StatusBar barStyle="light-content" backgroundColor="#1E40AF" />
+      <StatusBar barStyle="light-content" backgroundColor="#2563EB" />
       <Animated.View style={[ss.splashContent, {opacity, transform: [{scale}]}]}>
         <View style={ss.splashIcon}>
-          <Text style={ss.splashP}>P</Text>
+          <Feather name="shield" size={36} color="#fff" />
         </View>
         <Text style={ss.splashTitle}>ParkControl</Text>
         <Text style={ss.splashSub}>Control de estacionamientos</Text>
@@ -116,14 +117,14 @@ export default function App() {
 }
 
 const ss = StyleSheet.create({
-  splash: {flex: 1, backgroundColor: '#1E40AF', alignItems: 'center', justifyContent: 'center'},
+  splash: {flex: 1, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center'},
   splashContent: {alignItems: 'center'},
   splashIcon: {
     width: 80, height: 80, borderRadius: 24,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.25)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  splashP: {fontSize: 42, fontWeight: '800', color: '#fff', fontFamily: 'Inter-ExtraBold'},
-  splashTitle: {fontFamily: 'Inter-ExtraBold', fontSize: 32, fontWeight: '800', color: '#fff'},
-  splashSub: {fontFamily: 'Inter-Regular', fontSize: 15, color: 'rgba(255,255,255,0.7)', marginTop: 6},
+  splashTitle: {fontFamily: 'Inter-ExtraBold', fontSize: 30, fontWeight: '800', color: '#fff'},
+  splashSub: {fontFamily: 'Inter-Regular', fontSize: 14, color: 'rgba(255,255,255,0.65)', marginTop: 6},
 });

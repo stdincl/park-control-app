@@ -154,7 +154,7 @@ export default function Reservations({navigation, route}: Props) {
       {/* Header */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Feather name="arrow-left" size={20} color="#1E293B" />
+          <Feather name="chevron-left" size={22} color="#2563EB" />
         </TouchableOpacity>
         <View style={styles.headerTitle}>
           <Text style={styles.headerTitleText}>Reservas</Text>
@@ -202,7 +202,7 @@ export default function Reservations({navigation, route}: Props) {
                     </View>
                     {r.status === 'rejected' && r.rejection_reason && (
                       <View style={styles.rejectionNote}>
-                        <Feather name="alert-circle" size={13} color="#EF4444" />
+                        <Feather name="alert-circle" size={13} color="#DC2626" />
                         <Text style={styles.rejectionText}>{r.rejection_reason}</Text>
                       </View>
                     )}
@@ -225,7 +225,7 @@ export default function Reservations({navigation, route}: Props) {
         transparent
         statusBarTranslucent
         onRequestClose={() => { setPanel(null); setShowForm(false); }}>
-        <StatusBar translucent backgroundColor="rgba(0,0,0,0.5)" barStyle="light-content" />
+        <StatusBar translucent backgroundColor="rgba(15,23,42,0.45)" barStyle="light-content" />
         <View style={[styles.modalOverlay, {paddingTop: insets.top}]}>
           <View style={[styles.modalSheet, {paddingBottom: insets.bottom + 24}]}>
             <View style={styles.modalHandle} />
@@ -246,9 +246,15 @@ export default function Reservations({navigation, route}: Props) {
                   markedDates={{[dateStr]: {selected: true, selectedColor: '#2563EB'}}}
                   onDayPress={day => { setDateStr(day.dateString); setPanel(null); }}
                   theme={{
+                    calendarBackground: '#FFFFFF',
+                    backgroundColor: '#FFFFFF',
+                    dayTextColor: '#0F172A',
+                    textDisabledColor: '#CBD5E1',
+                    monthTextColor: '#0F172A',
                     todayTextColor: '#2563EB',
                     selectedDayBackgroundColor: '#2563EB',
                     arrowColor: '#2563EB',
+                    textSectionTitleColor: '#94A3B8',
                     textDayFontFamily: 'Inter',
                     textMonthFontFamily: 'Inter',
                     textDayHeaderFontFamily: 'Inter',
@@ -288,7 +294,7 @@ export default function Reservations({navigation, route}: Props) {
                       <TouchableOpacity
                         style={styles.counterBtn}
                         onPress={() => setDuration(d => Math.max(1, d - 1))}>
-                        <Feather name="minus" size={18} color="#475569" />
+                        <Feather name="minus" size={18} color="#64748B" />
                       </TouchableOpacity>
                       <View style={styles.durationVal}>
                         <Text style={styles.durationNum}>{duration}</Text>
@@ -297,7 +303,7 @@ export default function Reservations({navigation, route}: Props) {
                       <TouchableOpacity
                         style={styles.counterBtn}
                         onPress={() => setDuration(d => Math.min(12, d + 1))}>
-                        <Feather name="plus" size={18} color="#475569" />
+                        <Feather name="plus" size={18} color="#64748B" />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -318,11 +324,11 @@ export default function Reservations({navigation, route}: Props) {
                   <Text style={styles.fieldLabel}>Número de vehículos</Text>
                   <View style={styles.vehicleCounter}>
                     <TouchableOpacity style={styles.counterBtn} onPress={() => setVehicles(v => Math.max(1, v - 1))}>
-                      <Feather name="minus" size={18} color="#475569" />
+                      <Feather name="minus" size={18} color="#64748B" />
                     </TouchableOpacity>
                     <Text style={styles.counterVal}>{vehicles}</Text>
                     <TouchableOpacity style={styles.counterBtn} onPress={() => setVehicles(v => Math.min(10, v + 1))}>
-                      <Feather name="plus" size={18} color="#475569" />
+                      <Feather name="plus" size={18} color="#64748B" />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -368,71 +374,113 @@ export default function Reservations({navigation, route}: Props) {
   );
 }
 
+const cardShadow = {
+  shadowColor: '#64748B',
+  shadowOffset: {width: 0, height: 1},
+  shadowOpacity: 0.07,
+  shadowRadius: 6,
+  elevation: 1,
+} as const;
+
 const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: '#F8FAFC'},
   loadingBox: {flex: 1, alignItems: 'center', justifyContent: 'center'},
-  header: {flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: '#E2E8F0', backgroundColor: '#fff'},
-  backBtn: {width: 36, height: 36, borderRadius: 18, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', marginRight: 12},
+  header: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
+    backgroundColor: '#FFFFFF',
+  },
+  backBtn: {width: 44, height: 44, justifyContent: 'center', marginRight: 4},
   headerTitle: {flex: 1},
-  headerTitleText: {fontFamily: 'Inter', fontSize: 17, fontWeight: '700', color: '#1E293B'},
-  headerSubtitle: {fontFamily: 'Inter', fontSize: 12, color: '#94A3B8', marginTop: 1},
+  headerTitleText: {fontFamily: 'Inter', fontSize: 17, fontWeight: '700', color: '#0F172A'},
+  headerSubtitle: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginTop: 1},
   newBtn: {width: 36, height: 36, borderRadius: 18, backgroundColor: '#2563EB', alignItems: 'center', justifyContent: 'center'},
   disabled: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40},
-  disabledIcon: {width: 72, height: 72, borderRadius: 20, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center', marginBottom: 16},
-  disabledTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#1E293B', textAlign: 'center', marginBottom: 8},
+  disabledIcon: {
+    width: 72, height: 72, borderRadius: 20,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
+  disabledTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#0F172A', textAlign: 'center', marginBottom: 8},
   disabledText: {fontFamily: 'Inter', fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 21},
   scroll: {flex: 1},
-  list: {padding: 20, gap: 12},
+  list: {padding: 20, gap: 10},
   empty: {flex: 1, alignItems: 'center', justifyContent: 'center', padding: 48},
-  emptyTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#1E293B', marginTop: 16, marginBottom: 8},
+  emptyTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#0F172A', marginTop: 16, marginBottom: 8},
   emptyText: {fontFamily: 'Inter', fontSize: 14, color: '#64748B', textAlign: 'center', lineHeight: 21, marginBottom: 24},
   emptyBtn: {backgroundColor: '#2563EB', paddingHorizontal: 28, paddingVertical: 12, borderRadius: 12},
   emptyBtnText: {fontFamily: 'Inter', fontWeight: '700', fontSize: 14, color: '#fff'},
-  card: {backgroundColor: '#fff', borderRadius: 16, padding: 16, shadowColor: '#000', shadowOffset: {width: 0, height: 1}, shadowOpacity: 0.06, shadowRadius: 3, elevation: 2},
+  card: {
+    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16,
+    borderWidth: 1, borderColor: '#F1F5F9',
+    ...cardShadow,
+  },
   cardTop: {flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start'},
   cardLeft: {flex: 1},
-  cardDate: {fontFamily: 'Inter', fontSize: 15, fontWeight: '700', color: '#1E293B'},
-  cardTime: {fontFamily: 'Inter', fontSize: 13, color: '#475569', marginTop: 2},
+  cardDate: {fontFamily: 'Inter', fontSize: 15, fontWeight: '700', color: '#0F172A'},
+  cardTime: {fontFamily: 'Inter', fontSize: 13, color: '#64748B', marginTop: 2},
   cardVehicles: {fontFamily: 'Inter', fontSize: 12, color: '#94A3B8', marginTop: 4},
   statusBadge: {paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20},
   statusText: {fontFamily: 'Inter', fontSize: 12, fontWeight: '600'},
-  rejectionNote: {flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, padding: 10, backgroundColor: '#FEF2F2', borderRadius: 8},
-  rejectionText: {fontFamily: 'Inter', fontSize: 12, color: '#EF4444', flex: 1},
+  rejectionNote: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: 10, padding: 10,
+    backgroundColor: 'rgba(220,38,38,0.06)',
+    borderRadius: 8,
+  },
+  rejectionText: {fontFamily: 'Inter', fontSize: 12, color: '#DC2626', flex: 1},
   respondedBy: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginTop: 8},
-  // Modal
-  modalOverlay: {flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end'},
-  modalSheet: {backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingHorizontal: 24, paddingTop: 12},
-  modalHandle: {width: 36, height: 4, borderRadius: 2, backgroundColor: '#E2E8F0', alignSelf: 'center', marginBottom: 20},
-  modalTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#1E293B', marginBottom: 20},
-  // Panels
+  modalOverlay: {flex: 1, backgroundColor: 'rgba(15,23,42,0.45)', justifyContent: 'flex-end'},
+  modalSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingHorizontal: 24, paddingTop: 12,
+    borderTopWidth: 1, borderColor: '#E2E8F0',
+    shadowColor: '#000', shadowOffset: {width: 0, height: -2},
+    shadowOpacity: 0.06, shadowRadius: 12, elevation: 8,
+  },
+  modalHandle: {
+    width: 36, height: 4, borderRadius: 2,
+    backgroundColor: '#E2E8F0',
+    alignSelf: 'center', marginBottom: 20,
+  },
+  modalTitle: {fontFamily: 'Inter', fontSize: 18, fontWeight: '700', color: '#0F172A', marginBottom: 20},
   panelHeader: {flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16},
   panelBack: {fontFamily: 'Inter', fontSize: 14, color: '#2563EB', width: 64},
-  panelTitle: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#1E293B'},
-  // Form fields
+  panelTitle: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#0F172A'},
   field: {marginBottom: 16},
-  fieldLabel: {fontFamily: 'Inter', fontSize: 13, fontWeight: '500', color: '#475569', marginBottom: 8},
-  pickerBtn: {flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#F8FAFC', borderWidth: 1, borderColor: '#E2E8F0', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13},
-  pickerBtnText: {fontFamily: 'Inter', fontSize: 15, color: '#1E293B', flex: 1},
+  fieldLabel: {fontFamily: 'Inter', fontSize: 13, fontWeight: '500', color: '#64748B', marginBottom: 8},
+  pickerBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 10,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1.5, borderColor: '#E2E8F0',
+    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 13,
+  },
+  pickerBtnText: {fontFamily: 'Inter', fontSize: 15, color: '#0F172A', flex: 1},
   vehicleCounter: {flexDirection: 'row', alignItems: 'center', gap: 20},
-  counterBtn: {width: 40, height: 40, borderRadius: 12, backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center'},
-  counterVal: {fontFamily: 'Inter', fontSize: 22, fontWeight: '700', color: '#1E293B', minWidth: 32, textAlign: 'center'},
+  counterBtn: {
+    width: 40, height: 40, borderRadius: 12,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center', justifyContent: 'center',
+  },
+  counterVal: {fontFamily: 'Inter', fontSize: 22, fontWeight: '700', color: '#0F172A', minWidth: 32, textAlign: 'center'},
   submitBtn: {backgroundColor: '#2563EB', borderRadius: 14, paddingVertical: 14, alignItems: 'center', marginTop: 4, marginBottom: 8},
   submitText: {fontFamily: 'Inter', fontWeight: '700', fontSize: 15, color: '#fff'},
   cancelBtn: {alignItems: 'center', paddingVertical: 10},
   cancelText: {fontFamily: 'Inter', fontSize: 14, color: '#94A3B8'},
-  // Time wheels
   timePickerRow: {flexDirection: 'row', alignItems: 'stretch', marginBottom: 20},
   timePickerCol: {flex: 1, alignItems: 'center'},
-  timePickerLabel: {fontFamily: 'Inter', fontSize: 13, fontWeight: '600', color: '#475569', marginBottom: 8},
+  timePickerLabel: {fontFamily: 'Inter', fontSize: 13, fontWeight: '600', color: '#64748B', marginBottom: 8},
   timePickerDivider: {width: 1, backgroundColor: '#E2E8F0', marginHorizontal: 8},
   wheelRow: {flexDirection: 'row', alignItems: 'center', height: ITEM_H * 5, overflow: 'hidden'},
   wheel: {width: 52, height: ITEM_H * 5},
   wheelItem: {height: ITEM_H, alignItems: 'center', justifyContent: 'center'},
   wheelText: {fontFamily: 'Inter', fontSize: 22, color: '#CBD5E1'},
-  wheelTextActive: {fontSize: 28, fontWeight: '700', color: '#1E293B'},
-  wheelSep: {fontFamily: 'Inter', fontSize: 28, fontWeight: '700', color: '#1E293B', marginHorizontal: 4},
+  wheelTextActive: {fontSize: 28, fontWeight: '700', color: '#0F172A'},
+  wheelSep: {fontFamily: 'Inter', fontSize: 28, fontWeight: '700', color: '#0F172A', marginHorizontal: 4},
   durationPicker: {flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8},
   durationVal: {alignItems: 'center', minWidth: 56},
-  durationNum: {fontFamily: 'Inter', fontSize: 32, fontWeight: '700', color: '#1E293B'},
-  durationUnit: {fontFamily: 'Inter', fontSize: 12, color: '#94A3B8', marginTop: 2},
+  durationNum: {fontFamily: 'Inter', fontSize: 32, fontWeight: '700', color: '#0F172A'},
+  durationUnit: {fontFamily: 'Inter', fontSize: 12, color: '#64748B', marginTop: 2},
 });

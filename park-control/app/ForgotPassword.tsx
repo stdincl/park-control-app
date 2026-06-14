@@ -1,8 +1,9 @@
 import React, {useContext, useState} from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, SafeAreaView, Alert, ActivityIndicator,
+  StyleSheet, Alert, ActivityIndicator,
 } from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import Feather from 'react-native-vector-icons/Feather';
 import type {NativeStackScreenProps} from '@react-navigation/native-stack';
 import type {AuthStackParamList} from '../../App';
@@ -34,37 +35,39 @@ export default function ForgotPassword({navigation}: Props) {
   };
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backText}>← Volver</Text>
+          <Feather name="chevron-left" size={22} color="#2563EB" />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Recuperar contraseña</Text>
-        <View style={{width: 80}} />
+        <View style={{width: 44}} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {sent ? (
           <View style={styles.successBox}>
             <View style={styles.successIcon}>
-              <Feather name="check" size={32} color="#16A34A" />
+              <Feather name="check" size={28} color="#059669" />
             </View>
             <Text style={styles.successTitle}>Correo enviado</Text>
             <Text style={styles.successText}>
-              Si existe una cuenta asociada a <Text style={styles.emailHighlight}>{email}</Text>, recibirás un enlace para restablecer tu contraseña.
+              Si existe una cuenta asociada a{' '}
+              <Text style={styles.emailHighlight}>{email}</Text>
+              , recibirás un enlace para restablecer tu contraseña.
             </Text>
             <Text style={styles.successHint}>
               El enlace te llevará a la página web donde podrás ingresar tu nueva contraseña.
             </Text>
-            <TouchableOpacity style={styles.backToLogin} onPress={() => navigation.goBack()}>
-              <Text style={styles.backToLoginText}>Volver al inicio de sesión</Text>
+            <TouchableOpacity style={styles.backBtn2} onPress={() => navigation.goBack()}>
+              <Text style={styles.backBtn2Text}>Volver al inicio de sesión</Text>
             </TouchableOpacity>
           </View>
         ) : (
           <View style={styles.form}>
             <Text style={styles.title}>¿Olvidaste tu contraseña?</Text>
             <Text style={styles.subtitle}>
-              Ingresa tu correo electrónico y te enviaremos un enlace para restablecerla.
+              Ingresa tu correo y te enviaremos un enlace para restablecerla.
             </Text>
 
             <Input
@@ -98,34 +101,38 @@ const styles = StyleSheet.create({
   safe: {flex: 1, backgroundColor: '#F8FAFC'},
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingVertical: 16,
+    paddingHorizontal: 16, paddingVertical: 14,
     borderBottomWidth: 1, borderBottomColor: '#F1F5F9',
-    backgroundColor: '#fff',
+    backgroundColor: '#FFFFFF',
   },
-  backBtn: {width: 80},
-  backText: {fontFamily: 'Inter-Medium', fontSize: 14, color: '#2563EB'},
-  headerTitle: {fontFamily: 'Inter-SemiBold', fontSize: 16, color: '#1E293B'},
-  scroll: {flexGrow: 1, padding: 24},
-  form: {marginTop: 8},
-  title: {fontFamily: 'Inter-Bold', fontSize: 22, color: '#1E293B', marginBottom: 8},
-  subtitle: {fontFamily: 'Inter-Regular', fontSize: 15, color: '#64748B', lineHeight: 22, marginBottom: 28},
+  backBtn: {width: 44, height: 44, justifyContent: 'center'},
+  headerTitle: {fontFamily: 'Inter', fontSize: 16, fontWeight: '600', color: '#0F172A'},
+  scroll: {flexGrow: 1, padding: 20},
+
+  form: {paddingTop: 8},
+  title: {fontFamily: 'Inter', fontSize: 22, fontWeight: '700', color: '#0F172A', marginBottom: 8},
+  subtitle: {fontFamily: 'Inter', fontSize: 15, color: '#64748B', lineHeight: 22, marginBottom: 28},
+
   submitBtn: {
     backgroundColor: '#2563EB', paddingVertical: 15,
     borderRadius: 14, alignItems: 'center', marginTop: 8,
   },
-  submitBtnDisabled: {backgroundColor: '#93C5FD'},
-  submitBtnText: {fontFamily: 'Inter-SemiBold', fontSize: 16, color: '#fff'},
-  successBox: {flex: 1, alignItems: 'center', paddingTop: 40, paddingHorizontal: 8},
+  submitBtnDisabled: {opacity: 0.4},
+  submitBtnText: {fontFamily: 'Inter', fontSize: 16, fontWeight: '600', color: '#fff'},
+
+  successBox: {flex: 1, alignItems: 'center', paddingTop: 48, paddingHorizontal: 8},
   successIcon: {
     width: 72, height: 72, borderRadius: 36,
-    backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center', marginBottom: 20,
+    backgroundColor: 'rgba(5,150,105,0.08)',
+    borderWidth: 1, borderColor: 'rgba(5,150,105,0.18)',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
-  successTitle: {fontFamily: 'Inter-Bold', fontSize: 22, color: '#1E293B', marginBottom: 12},
-  successText: {fontFamily: 'Inter-Regular', fontSize: 15, color: '#475569', textAlign: 'center', lineHeight: 22, marginBottom: 12},
-  emailHighlight: {fontFamily: 'Inter-SemiBold', color: '#2563EB'},
-  successHint: {fontFamily: 'Inter-Regular', fontSize: 13, color: '#94A3B8', textAlign: 'center', lineHeight: 19, marginBottom: 32},
-  backToLogin: {
-    backgroundColor: '#2563EB', paddingVertical: 14, paddingHorizontal: 40, borderRadius: 14,
+  successTitle: {fontFamily: 'Inter', fontSize: 22, fontWeight: '700', color: '#0F172A', marginBottom: 12},
+  successText: {fontFamily: 'Inter', fontSize: 15, color: '#64748B', textAlign: 'center', lineHeight: 22, marginBottom: 12},
+  emailHighlight: {fontFamily: 'Inter', fontWeight: '600', color: '#2563EB'},
+  successHint: {fontFamily: 'Inter', fontSize: 13, color: '#94A3B8', textAlign: 'center', lineHeight: 19, marginBottom: 32},
+  backBtn2: {
+    backgroundColor: '#2563EB', paddingVertical: 14, paddingHorizontal: 36, borderRadius: 14,
   },
-  backToLoginText: {fontFamily: 'Inter-SemiBold', fontSize: 15, color: '#fff'},
+  backBtn2Text: {fontFamily: 'Inter', fontSize: 15, fontWeight: '600', color: '#fff'},
 });
